@@ -44,6 +44,37 @@ Supported [brands](brands.yml):
 * Product ID and Device ID are remembered between sessions to reduce API calls
 * The API is called only once an hour if the pellet stove is inactive
 
+## Config
+
+The settings of Micronova2Mqtt are taken from the `micronova2mqtt.yml` yaml configuration file.
+The `micronova2mqtt.yml` file has to exist in one of the following locations:
+
+ * A `data` directory in de filesystem root: `/data/micronova2mqtt.yml`
+ * A `.data` directory in the user home directory `~/.data/micronova2mqtt.yml`
+ * The current working directory
+ * A `data` directory in the current working directory
+
+## Configuration options
+
+| Config item               | Description                                                              |
+| ------------------------- | ------------------------------------------------------------------------ |
+| **mqtt**                  |                                                                          |
+| $~~$ url                  | MQTT Server URL                                                          |
+| $~~$ username/password    | MQTT Server Credentials (can be omitted)                                 |
+| $~~$ qos                  | MQTT Server Quality Of Service                                           |
+| $~~$ retain               | MQTT Server Retain messages                                              |
+| **micronova**             |                                                                          |
+| $~~$ brand                | Pellet stove brand / app                                                 |
+| $~~$ email                | User email address                                                       |
+| $~~$ password             | User password                                                            |
+| $~~$ **power**            | on/off secrets                                                           |
+| $~~~~$ on                 | Secret for the `On` switch                                               |
+| $~~~~$ off                | Secret for the `Off` switch                                              |
+| $~~$ **reg_keys**         | RegKey translations                                                      |
+| $~~~~$ key                | Parameter RegKey                                                         |
+| $~~~~$ topic              | Parameter Topic/Title                                                    |
+
+
 ## Brands file
 
 To add a new Pellet Stove brand copy the [brands](brands.yml) file to your data directory and add your Pellet Stove brand. You have to know the app-name, customer-code and domain URL.
