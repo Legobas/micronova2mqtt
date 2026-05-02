@@ -42,7 +42,7 @@ Supported [brands](brands.yml):
 * RegKey translation: convert Micronova RegKeys to meaningful MQTT topics
 * Tokens are stored and refreshed if expired
 * Product ID and Device ID are remembered between sessions to reduce API calls
-* The API is called only once an hour if the device is inactive
+* The API is called only once an hour if the pellet stove is inactive
 
 ## Brands file
 
