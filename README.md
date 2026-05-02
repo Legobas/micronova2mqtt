@@ -84,7 +84,7 @@ LOGLEVEL = INFO/DEBUG/ERROR
 
 ## Brands file
 
-To add a new Pellet Stove brand copy the [brands](brands.yml) file to your data directory and add your Pellet Stove brand. You have to know the app-name, customer-code and domain URL.
+To use micronova2mqtt with a new Pellet Stove brand copy the [brands](brands.yml) file to your data directory and add your Pellet Stove brand. The app-name, customer-code and domain URL have to be provided.
 If this works for you please create a pull request so other owners of the same brand can benefit from it.
 
 ## Inspired by:
