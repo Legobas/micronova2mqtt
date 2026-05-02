@@ -1,0 +1,120 @@
+alfaplam:
+  app-name: Alfaplam
+  customer-code: 862148
+  domain: alfaplam.agua-iot.com
+amg:
+  app-name: GO HEAT
+  customer-code: 859435
+  domain: amg.agua-iot.com
+boreal:
+  app-name: Boreal Home
+  customer-code: 173118
+  domain: boreal.agua-iot.com
+bronpi:
+  app-name: Bronpi Home
+  customer-code: 164873
+  domain: bronpi.agua-iot.com
+cola:
+  app-name: Darwin Evolution
+  customer-code: 475219
+  domain: cola.agua-iot.com
+corisit:
+  app-name: My Corisit
+  customer-code: 101427
+  domain: mycorisit.agua-iot.com
+elfire:
+  app-name: Elfire Wifi
+  customer-code: 402762
+  domain: elfire.agua-iot.com
+eva-calor:
+  app-name: EvaCalòr - PuntoFuoco
+  customer-code: 635987
+  domain: evastampaggi.agua-iot.com
+fontana-forni:
+  app-name: Fontana Forni
+  customer-code: 505912
+  domain: fontanaforni.agua-iot.com
+fonte-flamme:
+  app-name: Fonte Flamme contrôle 1
+  customer-code: 848324
+  domain: fonteflame.agua-iot.com
+globe-fire:
+  app-name: Globe-fire
+  customer-code: 634876
+  domain: globefire.agua-iot.com
+jolly-mec:
+  app-name: Jolly Mec Wi Fi
+  customer-code: 732584
+  domain: jollymec.agua-iot.com
+karmek-one:
+  app-name: Karmek Wifi
+  customer-code: 403873
+  domain: karmekone.agua-iot.com
+klover:
+  app-name: Klover Home
+  customer-code: 143789
+  domain: klover.agua-iot.com
+laminox:
+  app-name: Laminox Remote Control
+  customer-code: 352678
+  domain: laminox.agua-iot.com
+lorflam:
+  app-name: Lorflam Home
+  customer-code: 121567
+  domain: lorflam.agua-iot.com
+mcz-easy-connect:
+  app-name: Easy Connect
+  customer-code: 354924
+  domain: remote.mcz.it
+mcz-easy-connect-plus:
+  app-name: Easy Connect Plus
+  customer-code: 746318
+  domain: remote.mcz.it
+mcz-easy-connect-poele:
+  app-name: Easy Connect Poêle
+  customer-code: 354925
+  domain: remote.mcz.it
+moretti:
+  app-name: Moretti design
+  customer-code: 624813
+  domain: moretti.agua-iot.com
+micronova:
+  app-name: Nina
+  customer-code: 999999
+  domain: micronova.agua-iot.com
+nobis:
+  app-name: Nobis-Fi
+  customer-code: 700700
+  domain: nobis.agua-iot.com
+nordic-fire:
+  app-name: Nordic Fire 2.0
+  customer-code: 132678
+  domain: nordicfire.agua-iot.com
+piazzetta:
+  app-name: MyPiazzetta/MySuperior
+  customer-code: 458632
+  domain: piazzetta.agua-iot.com
+ravelli:
+  app-name: Ravelli Wi-Fi
+  customer-code: 953712
+  domain: aico.agua-iot.com
+solartecnik-eoss:
+  app-name: EOSS WIFI
+  customer-code: 326495
+  domain: solartecnik.agua-iot.com
+stufe:
+  app-name: Stufe a pellet Italia
+  customer-code: 015142
+  domain: stufepelletitalia.agua-iot.com
+thermoflux:
+  app-name: Thermoflux
+  customer-code: 391278
+  domain: thermoflux.agua-iot.com
+tim-sistem:
+  app-name: TS Smart
+  customer-code: 046629
+  domain: timsistem.agua-iot.com
+linea-vz:
+  app-name: Wi-Phire
+  customer-code: 521228
+  domain: lineavz.agua-iot.com
