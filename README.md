@@ -79,7 +79,9 @@ The `micronova2mqtt.yml` file has to exist in one of the following locations:
 The logging level can be defined by environment variable LOGLEVEL:
 
 ```
-LOGLEVEL = INFO/DEBUG/ERROR
+LOGLEVEL = INFO (default)
+LOGLEVEL = DEBUG
+LOGLEVEL = ERROR
 ```
 
 ## Brands file
