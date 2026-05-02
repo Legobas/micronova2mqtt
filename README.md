@@ -12,28 +12,31 @@ Supported [brands](brands.yml):
 * Bronpi
 * Cola
 * Corisit
+* Elcofire
 * Elfire
-* Eva-calor
-* Fontana-forni
-* Fonte-flamme
-* Globe-fire
-* Jolly-mec
-* Karmek-one
+* Eva Calòr
+* Fontana Forni
+* Fonte Flamme
+* Globe Fire
+* Jolly Mec
+* Karmek One
 * Klover
 * Laminox
+* La Nordica Extraflame
+* Linea VZ
 * Lorflam
-* MCZ (Easy Connect, Easy Connect Plus & Easy Connect Poêle apps)
+* MCZ (Easy Connect, Turbofonte, Easy Connect Plus & Easy Connect Poêle apps)
 * Moretti
 * Micronova
 * Nobis
-* Nordic-fire
+* Nordic Fire
 * Piazzetta
 * Ravelli
-* Solartecnik-eoss
+* Solartecnik EOSS
 * Stufe
 * Thermoflux
-* Tim-sistem
-* Linea-vz
+* Tim Sistem
+* Unical
 
 ## Key Features
 
