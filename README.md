@@ -1,6 +1,6 @@
 # Micronova2MQTT
 
-Micronova2MQTT is a bridge between Micronova Agua IOT pellet-stove controllers and MQTT-based home-automation systems
+Micronova2MQTT is a bridge between Micronova Agua IOT pellet-stove controllers and MQTT-based home-automation systems.
 It lets you monitor and control your stove from Home Assistant, Domoticz, Node‑RED, or other MQTT systems.
 Because it uses the Micronova API — which supports controllers from multiple brands — Micronova2MQTT is compatible with a wide range of pellet heating systems.
 
