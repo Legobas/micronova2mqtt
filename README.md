@@ -38,7 +38,7 @@ Supported [brands](brands.yml):
 ## Key Features
 
 * Automatic UUID creation and registration
-* Only the Brand has to be specified in config, customer code and API URL are chosen from brands.yml
+* Only the Brand has to be specified in the config file, customer code and API URL are provided by the brands.yml file
 * RegKey translation: convert Micronova RegKeys to meaningful MQTT topics
 * Tokens are stored and refreshed if expired
 * Product ID and Device ID are remembered between sessions to reduce API calls
