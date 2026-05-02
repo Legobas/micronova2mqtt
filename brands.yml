@@ -22,6 +22,10 @@ corisit:
   app-name: My Corisit
   customer-code: 101427
   domain: mycorisit.agua-iot.com
+elcofire:
+  app-name: Elcofire Pellet Home
+  customer-code: 132679
+  domain: elcofire.agua-iot.com
 elfire:
   app-name: Elfire Wifi
   customer-code: 402762
@@ -58,12 +62,20 @@ laminox:
   app-name: Laminox Remote Control
   customer-code: 352678
   domain: laminox.agua-iot.com
+la-nordica-extraflame:
+  app-name: Total Control 3.0
+  customer-code: 195764
+  domain: extraflame.agua-iot.com
+linea-vz:
+  app-name: Wi-Phire
+  customer-code: 521228
+  domain: lineavz.agua-iot.com
 lorflam:
   app-name: Lorflam Home
   customer-code: 121567
   domain: lorflam.agua-iot.com
 mcz-easy-connect:
-  app-name: Easy Connect
+  app-name: Easy Connect (Turbofonte)
   customer-code: 354924
   domain: remote.mcz.it
 mcz-easy-connect-plus:
@@ -114,7 +126,7 @@ tim-sistem:
   app-name: TS Smart
   customer-code: 046629
   domain: timsistem.agua-iot.com
-linea-vz:
-  app-name: Wi-Phire
-  customer-code: 521228
-  domain: lineavz.agua-iot.com
+unical:
+  app-name: App-O Bioen
+  customer-code: 289982
+  domain: unical.agua-iot.com
