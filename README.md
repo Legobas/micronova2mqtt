@@ -44,9 +44,9 @@ Supported [brands](brands.yml):
 * Product ID and Device ID are remembered between sessions to reduce API calls
 * The API is called only once an hour if the pellet stove is inactive
 
-## Config
+## Configuration
 
-The settings of Micronova2Mqtt are taken from the `micronova2mqtt.yml` yaml configuration file.
+The settings of Micronova2Mqtt are defined by the `micronova2mqtt.yml` yaml configuration file.
 The `micronova2mqtt.yml` file has to exist in one of the following locations:
 
  * A `data` directory in de filesystem root: `/data/micronova2mqtt.yml`
