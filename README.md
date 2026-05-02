@@ -74,6 +74,13 @@ The `micronova2mqtt.yml` file has to exist in one of the following locations:
 | $~~~~$ key                | Parameter RegKey                                                         |
 | $~~~~$ topic              | Parameter Topic/Title                                                    |
 
+## Environment variables
+
+The logging level can be defined by environment variable LOGLEVEL:
+
+```
+LOGLEVEL = INFO/DEBUG/ERROR
+```
 
 ## Brands file
 
