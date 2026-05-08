@@ -40,12 +40,20 @@ Supported [brands](brands.yml):
 
 ## Key Features
 
+### Intelligent Configuration & Setup
 * Automatic UUID creation and registration
-* Only the Brand has to be specified in the config file, customer code and API URL are provided by the brands.yml file
-* RegKey translation: convert Micronova RegKeys to meaningful MQTT topics
-* Tokens are stored and refreshed if expired
-* Product ID and Device ID are remembered between sessions to reduce API calls
-* The API is called only once an hour if the pellet stove is inactive
+* Simplified configuration — only specify the Brand; customer code and API URL are sourced from brands.yml
+* RegKey translation - Micronova RegKeys can be converted to meaningful MQTT topics
+
+### Performance & Session Management
+* Smart token handling with automatic storage and refresh
+* Persistent storing of Product ID and Device ID minimizes API calls across sessions
+* Minimal API usage — calls are limited to once per hour during device inactivity
+
+### Security
+* Encrypted session data protecting sensitive tokens
+* Configurable custom MQTT payload values to switch the pallet stove On/Off - a non-standard 'on' or 'off' value adds extra security
+
 
 ## Configuration
 
@@ -56,6 +64,19 @@ The `micronova2mqtt.yml` file has to exist in one of the following locations:
  * A `.data` directory in the user home directory `~/.data/micronova2mqtt.yml`
  * The current working directory
  * A `data` directory in the current working directory
+
+## Example micronova2mqtt.yml Configuration file
+
+```yml
+mqtt:
+    url: mqttbroker:1883
+    username: test
+    password: pass
+micronova:
+    brand: alfaplam
+    email: user@mail.com
+    password: 'SecretP@ssw'
+```
 
 ## Configuration options
 
