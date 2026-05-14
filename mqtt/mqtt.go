@@ -14,7 +14,6 @@ const (
 	topicSet          = topicBase + "set/"
 	topicSubscribe    = topicSet + "+"
 	topicStatus       = topicBase + "status"
-	topicParameters   = topicBase + "parameters"
 	qosAtMostOnce     = byte(0)
 	qosAtLeastOnce    = byte(1)
 	qosExactlyOnce    = byte(2)
@@ -104,9 +103,10 @@ func (mc MqttConnection) receiveMqtt(client MQTT.Client, msg MQTT.Message) {
 	}
 }
 
-func (mc MqttConnection) Publish(key string, value string) {
-	topic := topicParameters + "/" + key
-	token := mc.mqttClient.Publish(topic, mc.qos, mc.retain, value)
+func (mc MqttConnection) Publish(category, key, value string, retain bool) {
+	var topic string
+	topic = topicBase + category + "/" + key
+	token := mc.mqttClient.Publish(topic, mc.qos, retain, value)
 	if !token.WaitTimeout(connectionTimeout) || token.Error() != nil {
 		log.Error().Err(token.Error()).Msgf("Failed to publish to %s", topic)
 	}

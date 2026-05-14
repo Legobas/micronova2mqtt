@@ -108,7 +108,50 @@ LOGLEVEL = DEBUG
 LOGLEVEL = ERROR
 ```
 
-## Brands file
+## Installation
+
+Docker compose example:
+
+```yml
+services:
+  Micronova2MQTT:
+    image: legobas/micronova2mqtt:latest
+    container_name: micronova2mqtt
+    environment:
+      - LOGLEVEL=info
+      - TZ=America/New_York
+    volumes:
+      - /home/legobas/micronova2mqtt:/data:rw
+    restart: unless-stopped
+```
+
+## Security
+
+### On/Off values.
+
+The default values to switch the pellet stove are `on` and `off` like these MQTT messages:
+
+    micronova2mqtt/set/Power = on
+    micronova2mqtt/set/Power = off
+
+To make these values less obvious they can be obfuscated by this config setting:
+
+    micronova:
+        power:
+            on:  secret1
+            off: secret2
+
+The on/off values can than be used within the MQTT messages:
+
+    micronova2mqtt/set/Power = secret1
+    micronova2mqtt/set/Power = secret2
+
+### Session storage
+
+The session data is stored in the file `session.dat`.
+This file is encrypted because it contains sensitive data like the jwt tokens.
+
+## The Brands file
 
 To use micronova2mqtt with a new Pellet Stove brand copy the [brands](brands.yml) file to your data directory and add your Pellet Stove brand. The app-name, customer-code and domain URL have to be provided.
 If this works for you please create a pull request so other owners of the same brand can benefit from it.
