@@ -58,12 +58,6 @@ Supported [brands](brands.yml):
 ## Configuration
 
 The settings of Micronova2Mqtt are defined by the `micronova2mqtt.yml` yaml configuration file.
-The `micronova2mqtt.yml` file has to exist in one of the following locations:
-
- * A `data` directory in de filesystem root: `/data/micronova2mqtt.yml`
- * A `.data` directory in the user home directory `~/.data/micronova2mqtt.yml`
- * The current working directory
- * A `data` directory in the current working directory
 
 ## Example micronova2mqtt.yml Configuration file
 
