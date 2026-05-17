@@ -54,6 +54,22 @@ Supported [brands](brands.yml):
 * Encrypted session data protecting sensitive tokens
 * Configurable custom MQTT payload values to switch the pallet stove On/Off - a non-standard 'on' or 'off' value adds extra security
 
+## Installation
+
+Docker compose example:
+
+```yml
+services:
+  Micronova2MQTT:
+    image: legobas/micronova2mqtt:latest
+    container_name: micronova2mqtt
+    environment:
+      - LOGLEVEL=info
+      - TZ=America/New_York
+    volumes:
+      - /home/legobas/micronova2mqtt:/data:rw
+    restart: unless-stopped
+```
 
 ## Configuration
 
@@ -100,23 +116,6 @@ The logging level can be defined by environment variable LOGLEVEL:
 LOGLEVEL = INFO (default)
 LOGLEVEL = DEBUG
 LOGLEVEL = ERROR
-```
-
-## Installation
-
-Docker compose example:
-
-```yml
-services:
-  Micronova2MQTT:
-    image: legobas/micronova2mqtt:latest
-    container_name: micronova2mqtt
-    environment:
-      - LOGLEVEL=info
-      - TZ=America/New_York
-    volumes:
-      - /home/legobas/micronova2mqtt:/data:rw
-    restart: unless-stopped
 ```
 
 ## Security
