@@ -69,7 +69,7 @@ func readDevice() {
 		log.Fatal().Msg("readDevice: No Request ID")
 	}
 
-	if err := getJobResult(result.RequestId, "RequestReading"); err != nil {
+	if err := getJobResult(result.RequestId); err != nil {
 		state = stateNotResponding
 		log.Error().Err(err).Msg("Device is not responding")
 		return

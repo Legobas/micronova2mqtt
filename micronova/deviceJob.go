@@ -34,17 +34,17 @@ type deviceJobResp struct {
 	JobAnswerData    data   `json:"jobAnswerData"`
 }
 
-func getJobResult(requestId string, cmd string) error {
+func getJobResult(requestId string) error {
 	for range retryDeviceJob {
 		time.Sleep(time.Second)
-		if deviceJob(requestId, cmd) {
+		if deviceJob(requestId) {
 			return nil
 		}
 	}
-	return fmt.Errorf("No DeviceJob result for %s within %d seconds", cmd, retryDeviceJob)
+	return fmt.Errorf("No DeviceJob result within %d seconds", retryDeviceJob)
 }
 
-func deviceJob(requestId string, cmd string) bool {
+func deviceJob(requestId string) bool {
 	// Create context for timeout
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()

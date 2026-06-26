@@ -86,10 +86,6 @@ func (m *MockToken) Error() error {
 func TestNewMqttConnectionSuccess(t *testing.T) {
 	properties := MqttProperties{
 		Url:      "tcp://localhost:1883",
-		User:     "testuser",
-		Password: "testpass",
-		Qos:      qosAtLeastOnce,
-		Retain:   true,
 		ClientId: "test-client",
 		Receiver: func(key, value string) {},
 	}

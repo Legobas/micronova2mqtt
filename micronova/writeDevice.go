@@ -69,7 +69,7 @@ func writeDevice(item int, value int, mask int) {
 		log.Fatal().Msg("WriteDevice: No Request ID")
 	}
 
-	if err := getJobResult(result.RequestId, "RequestWriting"); err != nil {
+	if err := getJobResult(result.RequestId); err != nil {
 		state = stateNotResponding
 		log.Error().Err(err).Msg("Device is not responding")
 		return
