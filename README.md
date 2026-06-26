@@ -122,19 +122,20 @@ LOGLEVEL = ERROR
 
 ### On/Off values.
 
-The default values to switch the pellet stove are `on` and `off` like these MQTT messages:
+The default values to switch the pellet stove are `on` and `off`.
+Switching the pellet stove On or Off can be done by sending the MQTT messages:
 
     micronova2mqtt/set/Power = on
     micronova2mqtt/set/Power = off
 
-To make these values less obvious they can be obfuscated by this config setting:
+To make these values less obvious they can be obfuscated by setting the config settings:
 
     micronova:
         power:
             on:  secret1
             off: secret2
 
-The on/off values can than be used within the MQTT messages:
+These on/off values can be used by sending the MQTT messages:
 
     micronova2mqtt/set/Power = secret1
     micronova2mqtt/set/Power = secret2
@@ -142,7 +143,7 @@ The on/off values can than be used within the MQTT messages:
 ### Session storage
 
 The session data is stored in the file `session.dat`.
-This file is encrypted because it contains sensitive data like the jwt tokens.
+This file is encrypted because it contains sensitive data like the JWT tokens.
 
 ## The Brands file
 
