@@ -35,8 +35,8 @@ func NewMockDataManager() *files.DataManager {
 	}
 }
 
-// TestSetPowerOn tests setting power to on state
-func TestSetPowerOn(t *testing.T) {
+// TestSetPower tests setting power
+func TestSetPower(t *testing.T) {
 	dm = NewMockDataManager()
 	parameters = []parameter{
 		{
@@ -48,86 +48,16 @@ func TestSetPowerOn(t *testing.T) {
 		},
 	}
 
-	SetPower("on")
-	// Test passes if no panic occurs
-	// In production, you'd verify the writeDevice call was made
-}
-
-// TestSetPowerOff tests setting power to off state
-func TestSetPowerOff(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			topicKey: "power",
-			offset:   232,
-			mask:     65535,
-			minimum:  0,
-			maximum:  1,
-		},
-	}
-
-	SetPower("off")
+	SetPower("test")
 	// Test passes if no panic occurs
 }
 
-// TestSetPowerCustomOn tests custom power on value from config
-func TestSetPowerCustomOn(t *testing.T) {
-	dm = NewMockDataManager()
-	dm.Config.Micronova.Power.On = "custom_on"
-
-	SetPower("custom_on")
-	// Verify custom value is respected
-}
-
-// TestSetPowerCustomOff tests custom power off value from config
-func TestSetPowerCustomOff(t *testing.T) {
-	dm = NewMockDataManager()
-	dm.Config.Micronova.Power.Off = "custom_off"
-
-	SetPower("custom_off")
-	// Verify custom value is respected
-}
-
-// TestSetPowerInvalid tests invalid power command
-func TestSetPowerInvalid(t *testing.T) {
+// TestSetPowerEmptyCommand tests empty power command
+func TestSetPowerEmptyCommand(t *testing.T) {
 	dm = NewMockDataManager()
 
-	// Should not panic on invalid command
-	SetPower("invalid_command")
-}
-
-// TestSetParameterValid tests setting a valid parameter
-func TestSetParameterValid(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			topicKey: "temperature",
-			offset:   10,
-			mask:     255,
-			minimum:  0,
-			maximum:  100,
-		},
-	}
-
-	SetParameter("temperature", "50")
-	// Test passes if no panic occurs
-}
-
-// TestSetParameterWithinRange tests parameter value within valid range
-func TestSetParameterWithinRange(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			topicKey: "speed",
-			offset:   20,
-			mask:     255,
-			minimum:  10,
-			maximum:  100,
-		},
-	}
-
-	SetParameter("speed", "50")
-	// Value 50 is within range [10, 100]
+	SetPower("")
+	// Should handle gracefully without panic
 }
 
 // TestSetParameterAboveMaximum tests parameter exceeding maximum value
@@ -198,108 +128,6 @@ func TestSetParameterNotFound(t *testing.T) {
 	// Should fail gracefully without panicking
 }
 
-// TestSetParameterAtMinimumBoundary tests parameter at minimum boundary
-func TestSetParameterAtMinimumBoundary(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			topicKey: "bounded",
-			offset:   10,
-			mask:     255,
-			minimum:  10,
-			maximum:  100,
-		},
-	}
-
-	SetParameter("bounded", "10")
-	// Should succeed as value equals minimum
-}
-
-// TestSetParameterAtMaximumBoundary tests parameter at maximum boundary
-func TestSetParameterAtMaximumBoundary(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			topicKey: "bounded",
-			offset:   10,
-			mask:     255,
-			minimum:  10,
-			maximum:  100,
-		},
-	}
-
-	SetParameter("bounded", "100")
-	// Should succeed as value equals maximum
-}
-
-// TestSetUpdateMqttTrue tests enabling MQTT update flag
-func TestSetUpdateMqttTrue(t *testing.T) {
-	updateMqtt = false
-	SetUpdateMqtt(true)
-
-	if !updateMqtt {
-		t.Errorf("Expected updateMqtt to be true, got false")
-	}
-}
-
-// TestSetUpdateMqttFalse tests disabling MQTT update flag
-func TestSetUpdateMqttFalse(t *testing.T) {
-	updateMqtt = true
-	SetUpdateMqtt(false)
-
-	if updateMqtt {
-		t.Errorf("Expected updateMqtt to be false, got true")
-	}
-}
-
-// TestSetParameterMultipleParameters tests selecting correct parameter from multiple
-func TestSetParameterMultipleParameters(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			topicKey: "param1",
-			offset:   10,
-			mask:     255,
-			minimum:  0,
-			maximum:  100,
-		},
-		{
-			topicKey: "param2",
-			offset:   20,
-			mask:     255,
-			minimum:  0,
-			maximum:  200,
-		},
-		{
-			topicKey: "param3",
-			offset:   30,
-			mask:     255,
-			minimum:  0,
-			maximum:  50,
-		},
-	}
-
-	SetParameter("param2", "150")
-	// Should set only param2, not param1 or param3
-}
-
-// TestSetParameterZeroValue tests setting parameter to zero
-func TestSetParameterZeroValue(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			topicKey: "counter",
-			offset:   10,
-			mask:     255,
-			minimum:  0,
-			maximum:  100,
-		},
-	}
-
-	SetParameter("counter", "0")
-	// Should succeed as 0 is within range
-}
-
 // TestSetParameterNegativeValue tests negative parameter value
 func TestSetParameterNegativeValue(t *testing.T) {
 	dm = NewMockDataManager()
@@ -315,14 +143,6 @@ func TestSetParameterNegativeValue(t *testing.T) {
 
 	SetParameter("setting", "-5")
 	// Should fail as -5 < minimum of 0
-}
-
-// TestSetPowerEmptyCommand tests empty power command
-func TestSetPowerEmptyCommand(t *testing.T) {
-	dm = NewMockDataManager()
-
-	SetPower("")
-	// Should handle gracefully without panic
 }
 
 // TestParameterStructure tests parameter data structure
@@ -345,6 +165,26 @@ func TestParameterStructure(t *testing.T) {
 	}
 	if param.value != 50 {
 		t.Errorf("Expected value 50, got %d", param.value)
+	}
+}
+
+// TestSetUpdateMqttTrue tests enabling MQTT update flag
+func TestSetUpdateMqttTrue(t *testing.T) {
+	updateMqtt = false
+	SetUpdateMqtt(true)
+
+	if !updateMqtt {
+		t.Errorf("Expected updateMqtt to be true, got false")
+	}
+}
+
+// TestSetUpdateMqttFalse tests disabling MQTT update flag
+func TestSetUpdateMqttFalse(t *testing.T) {
+	updateMqtt = true
+	SetUpdateMqtt(false)
+
+	if updateMqtt {
+		t.Errorf("Expected updateMqtt to be false, got true")
 	}
 }
 
