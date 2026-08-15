@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"slices"
 	"strings"
@@ -127,6 +128,12 @@ func deviceRegisters() {
 		return
 	}
 	defer resp.Body.Close()
+
+	respDump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		log.Error().Err(err).Msg("Response dump error")
+	}
+	log.Trace().Msgf("DeviceRegisters Response:\n%+v", string(respDump))
 
 	var result deviceRegistersResp
 	err = json.NewDecoder(resp.Body).Decode(&result)
