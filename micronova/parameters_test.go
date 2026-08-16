@@ -22,6 +22,14 @@ func TestGetText_Formula(t *testing.T) {
 	}
 }
 
+func TestGetText_Formula_Int(t *testing.T) {
+	// formula: int(#/4), value 11 => 3
+	txt := getText(11, "int(#/4)", "{0}", nil)
+	if txt != "3" && txt != "3.0" {
+		t.Fatalf("expected 3, got %q", txt)
+	}
+}
+
 func TestIsActive(t *testing.T) {
 	parameters = []parameter{
 		{regKey: "status_get", text: "Off"},

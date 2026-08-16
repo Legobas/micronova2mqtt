@@ -3,6 +3,7 @@ package micronova
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -39,6 +40,10 @@ func getText(value int, formulaStr string, format string, valueDescr []valueDesc
 			log.Error().Err(err).Msgf("Formule calculation error: %s", form)
 			return fmt.Sprintf("?%v?", value)
 		}
+		f.RegisterFunc("int", 1, func(args ...float64) float64 {
+			return math.Round(args[0])
+		})
+
 		val := formula.Var("x", value)
 		text = fmt.Sprintf(formatStr, f.MustEval(val))
 	}
