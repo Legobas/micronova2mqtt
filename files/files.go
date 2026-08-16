@@ -34,7 +34,7 @@ type Power struct {
 
 type RegKey struct {
 	Key   string `yaml:"key"`
-	Topic string `yaml:"topic"`
+	Title string `yaml:"title"`
 }
 
 type Micronova struct {
