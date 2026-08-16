@@ -36,7 +36,7 @@ func getText(value int, formulaStr string, format string, valueDescr []valueDesc
 
 		f, err := formula.New(form)
 		if err != nil {
-			log.Error().Err(err).Msgf("Formule caculation error: %s", form)
+			log.Error().Err(err).Msgf("Formule calculation error: %s", form)
 			return fmt.Sprintf("?%v?", value)
 		}
 		val := formula.Var("x", value)
@@ -70,11 +70,10 @@ func publishParameters() {
 
 	for _, par := range parameters {
 		key := par.regKey
-		if len(par.topicKey) != 0 {
-			key = par.topicKey
+		if len(par.title) != 0 {
+			key = par.title
 		}
 		params[key] = par.text
-		log.Trace().Msgf("Parameter %s=%s", key, par.text)
 	}
 	jsonBytes, err := json.Marshal(params)
 	if err != nil {
@@ -84,5 +83,5 @@ func publishParameters() {
 	jsonStr := string(jsonBytes)
 	log.Debug().Msgf("Parameters: %s", jsonStr)
 
-	publisher(deviceName, "parameters", jsonStr , false)
+	publisher(deviceName, "parameters", jsonStr, false)
 }

@@ -38,7 +38,7 @@ type valueDescr struct {
 
 type parameter struct {
 	regKey     string
-	topicKey   string
+	title      string
 	offset     int
 	mask       int
 	minimum    int
@@ -165,7 +165,7 @@ func SetPower(command string) {
 
 func SetParameter(key string, value string) {
 	for _, par := range parameters {
-		if key == par.topicKey {
+		if key == par.title {
 			val, err := strconv.Atoi(value)
 			if err != nil {
 				log.Error().Msgf("Incorrect parameter: %v", err)

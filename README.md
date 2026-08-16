@@ -43,7 +43,7 @@ Supported [brands](brands.yml):
 ### Intelligent Configuration & Setup
 * Automatic UUID creation and registration
 * Simplified configuration — only specify the Brand; customer code and API URL are sourced from brands.yml
-* RegKey translation - Micronova RegKeys can be converted to meaningful MQTT topics
+* Reduced RegKeys set - Option to use only relevant Micronova RegKeys with customized titles
 
 ### Performance & Session Management
 * Smart token handling with automatic storage and refresh
@@ -106,7 +106,7 @@ micronova:
 | $~~~~$ off                | Secret for the `Off` switch                                              |
 | $~~$ **reg_keys**         | RegKey translations                                                      |
 | $~~~~$ key                | Parameter RegKey                                                         |
-| $~~~~$ topic              | Parameter Topic/Title                                                    |
+| $~~~~$ title              | Rename/translate parameter to JSON field name                            |
 
 ## Environment variables
 

@@ -130,19 +130,17 @@ func deviceRegisters() {
 	}
 	defer resp.Body.Close()
 
-	respDump, err := httputil.DumpResponse(resp, true)
+	raw, err := httputil.DumpResponse(resp, true)
 	if err != nil {
 		log.Error().Err(err).Msg("Response dump error")
 	}
-	log.Trace().Msgf("DeviceRegisters Response:\n%+v", string(respDump))
+	log.Trace().Msgf("DeviceRegisters Response:\n%+v", string(raw))
 
 	var result deviceRegistersResp
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error decoding response")
 	}
-
-	//log.Trace().Msgf("DeviceRegisters Response:\n%+v", result)
 
 	// Validate HTTP status code and response Success field
 	if resp.StatusCode != http.StatusOK || !result.Success {
@@ -155,30 +153,30 @@ func deviceRegisters() {
 
 	for _, reg := range result.DeviceRegistersMap.RegistersMap[0].Registers {
 		var selected bool
-		var topicKey string
+		var keyTitle string
 		if len(offsets) != 0 {
 			selected = slices.Contains(offsets, reg.Offset)
-			topicKey = reg.RegKey
+			keyTitle = reg.RegKey
 		}
 		if len(dm.Config.Micronova.RegKeys) != 0 {
 			for _, regKey := range dm.Config.Micronova.RegKeys {
 				if regKey.Key == reg.RegKey {
 					selected = true
-					topicKey = regKey.Topic
+					keyTitle = regKey.Title
 					break
 				}
 			}
 		}
 		if selected && (reg.RegType == "SET" || reg.RegType == "GET") {
 			param := parameter{
-				regKey:   reg.RegKey,
-				topicKey: topicKey,
-				offset:   reg.Offset,
-				mask:     reg.Mask,
-				minimum:  reg.SetMin,
-				maximum:  reg.SetMax,
-				formula:  reg.Formula,
-				format:   reg.FormatString,
+				regKey:  reg.RegKey,
+				title:   keyTitle,
+				offset:  reg.Offset,
+				mask:    reg.Mask,
+				minimum: reg.SetMin,
+				maximum: reg.SetMax,
+				formula: reg.Formula,
+				format:  reg.FormatString,
 			}
 			if len(reg.EncVal) != 0 {
 				for _, encval := range reg.EncVal {

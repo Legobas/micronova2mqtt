@@ -13,8 +13,8 @@ func NewMockDataManager() *files.DataManager {
 		Off: "off",
 	}
 	rk := files.RegKey{
-		Key: "Key",
-		Topic: "Topic",
+		Key:   "Key",
+		Title: "Topic",
 	}
 	mn := files.Micronova{
 		Power:   pc,
@@ -40,11 +40,11 @@ func TestSetPower(t *testing.T) {
 	dm = NewMockDataManager()
 	parameters = []parameter{
 		{
-			topicKey: "power",
-			offset:   232,
-			mask:     65535,
-			minimum:  0,
-			maximum:  1,
+			title:   "power",
+			offset:  232,
+			mask:    65535,
+			minimum: 0,
+			maximum: 1,
 		},
 	}
 
@@ -65,11 +65,11 @@ func TestSetParameterAboveMaximum(t *testing.T) {
 	dm = NewMockDataManager()
 	parameters = []parameter{
 		{
-			topicKey: "setting",
-			offset:   15,
-			mask:     255,
-			minimum:  0,
-			maximum:  50,
+			title:   "setting",
+			offset:  15,
+			mask:    255,
+			minimum: 0,
+			maximum: 50,
 		},
 	}
 
@@ -82,11 +82,11 @@ func TestSetParameterBelowMinimum(t *testing.T) {
 	dm = NewMockDataManager()
 	parameters = []parameter{
 		{
-			topicKey: "setting",
-			offset:   15,
-			mask:     255,
-			minimum:  10,
-			maximum:  50,
+			title:   "setting",
+			offset:  15,
+			mask:    255,
+			minimum: 10,
+			maximum: 50,
 		},
 	}
 
@@ -99,11 +99,11 @@ func TestSetParameterInvalidValue(t *testing.T) {
 	dm = NewMockDataManager()
 	parameters = []parameter{
 		{
-			topicKey: "setting",
-			offset:   15,
-			mask:     255,
-			minimum:  0,
-			maximum:  100,
+			title:   "setting",
+			offset:  15,
+			mask:    255,
+			minimum: 0,
+			maximum: 100,
 		},
 	}
 
@@ -116,11 +116,11 @@ func TestSetParameterNotFound(t *testing.T) {
 	dm = NewMockDataManager()
 	parameters = []parameter{
 		{
-			topicKey: "existing_param",
-			offset:   10,
-			mask:     255,
-			minimum:  0,
-			maximum:  100,
+			title:   "existing_param",
+			offset:  10,
+			mask:    255,
+			minimum: 0,
+			maximum: 100,
 		},
 	}
 
@@ -133,11 +133,11 @@ func TestSetParameterNegativeValue(t *testing.T) {
 	dm = NewMockDataManager()
 	parameters = []parameter{
 		{
-			topicKey: "setting",
-			offset:   10,
-			mask:     255,
-			minimum:  0,
-			maximum:  100,
+			title:   "setting",
+			offset:  10,
+			mask:    255,
+			minimum: 0,
+			maximum: 100,
 		},
 	}
 
@@ -148,16 +148,16 @@ func TestSetParameterNegativeValue(t *testing.T) {
 // TestParameterStructure tests parameter data structure
 func TestParameterStructure(t *testing.T) {
 	param := parameter{
-		regKey:   "reg_key_1",
-		topicKey: "topic_1",
-		offset:   10,
-		mask:     255,
-		minimum:  0,
-		maximum:  100,
-		value:    50,
-		formula:  "x * 2",
-		format:   "%.2f",
-		text:     "Test Parameter",
+		regKey:  "reg_key_1",
+		title:   "topic_1",
+		offset:  10,
+		mask:    255,
+		minimum: 0,
+		maximum: 100,
+		value:   50,
+		formula: "x * 2",
+		format:  "%.2f",
+		text:    "Test Parameter",
 	}
 
 	if param.regKey != "reg_key_1" {
@@ -223,11 +223,11 @@ func BenchmarkSetPower(b *testing.B) {
 	dm = NewMockDataManager()
 	parameters = []parameter{
 		{
-			topicKey: "power",
-			offset:   232,
-			mask:     65535,
-			minimum:  0,
-			maximum:  1,
+			title:   "power",
+			offset:  232,
+			mask:    65535,
+			minimum: 0,
+			maximum: 1,
 		},
 	}
 
@@ -242,11 +242,11 @@ func BenchmarkSetParameter(b *testing.B) {
 	dm = NewMockDataManager()
 	parameters = []parameter{
 		{
-			topicKey: "temperature",
-			offset:   10,
-			mask:     255,
-			minimum:  0,
-			maximum:  100,
+			title:   "temperature",
+			offset:  10,
+			mask:    255,
+			minimum: 0,
+			maximum: 100,
 		},
 	}
 
