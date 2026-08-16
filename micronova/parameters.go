@@ -1,6 +1,7 @@
 package micronova
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -64,12 +65,24 @@ func isActive() bool {
 }
 
 func publishParameters() {
+	var params map[string]string
+	params = make(map[string]string)
+
 	for _, par := range parameters {
 		key := par.regKey
 		if len(par.topicKey) != 0 {
 			key = par.topicKey
 		}
-		publisher(deviceName + "/parameters", key, par.text, false)
-		log.Debug().Msgf("Published parameter %s=%s", key, par.text)
+		params[key] = par.text
+		log.Trace().Msgf("Parameter %s=%s", key, par.text)
 	}
+	jsonBytes, err := json.Marshal(params)
+	if err != nil {
+		log.Error().Err(err).Msg("Marshal Error")
+		return
+	}
+	jsonStr := string(jsonBytes)
+	log.Debug().Msgf("Parameters: %s", jsonStr)
+
+	publisher(deviceName, "parameters", jsonStr , false)
 }

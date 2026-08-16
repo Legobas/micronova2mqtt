@@ -26,9 +26,10 @@ type deviceRegistersReq struct {
 }
 
 type encVal struct {
-	Value       int    `json:"value"`
-	Lang        string `json:"lang"`
-	Description string `json:"description"`
+	// Workaround: Value should be an int, but sometimes the data contains a wrong value (like 0.64)
+	Value       float32 `json:"value"`
+	Lang        string  `json:"lang"`
+	Description string  `json:"description"`
 }
 
 type register struct {
@@ -182,7 +183,7 @@ func deviceRegisters() {
 			if len(reg.EncVal) != 0 {
 				for _, encval := range reg.EncVal {
 					if encval.Lang == ValueLanguage {
-						valueDescr := valueDescr{encval.Value, encval.Description}
+						valueDescr := valueDescr{int(encval.Value), encval.Description}
 						param.valueDescr = append(param.valueDescr, valueDescr)
 					}
 				}
