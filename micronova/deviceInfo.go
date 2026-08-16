@@ -117,10 +117,10 @@ func deviceInfo() {
 			}
 
 			deviceName = device.Name
-			publisher(device.Name, "description", device.Description, true)
-			publisher(device.Name, "product", device.ProductName, true)
-			publisher(device.Name, "creationDate", fmt.Sprintf("%v", device.CreationDate), true)
-			publisher(device.Name, "online", fmt.Sprintf("%v", device.Online), true)
+			publisher(device.Name, "description", device.Description)
+			publisher(device.Name, "product", device.ProductName)
+			publisher(device.Name, "creationDate", fmt.Sprintf("%v", device.CreationDate))
+			publisher(device.Name, "online", fmt.Sprintf("%v", device.Online))
 
 			break
 		}

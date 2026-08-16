@@ -10,47 +10,57 @@ import (
 
 const (
 	connectionTimeout = time.Second * 10
-	topicBase         = "micronova2mqtt/"
-	topicSet          = topicBase + "set/"
-	topicSubscribe    = topicSet + "+"
-	topicStatus       = topicBase + "status"
+	topicBase         = "micronova2mqtt"
 	qosAtMostOnce     = byte(0)
 	qosAtLeastOnce    = byte(1)
 	qosExactlyOnce    = byte(2)
-	retainMessages    = true
+	retainMessage     = true
 )
 
 type receiveFunc func(key, value string)
 
 type MqttProperties struct {
-	Url      string
-	User     string
-	Password string
-	Qos      byte
-	Retain   bool
-	ClientId string
-	Receiver receiveFunc
+	Url       string
+	User      string
+	Password  string
+	Qos       byte
+	Retain    bool
+	BaseTopic string
+	ClientId  string
+	Receiver  receiveFunc
 }
 
 type MqttConnection struct {
-	mqttClient MQTT.Client
-	qos        byte
-	retain     bool
-	configPath string
-	receiver   receiveFunc
+	mqttClient     MQTT.Client
+	qos            byte
+	retain         bool
+	baseTopic      string
+	setTopic       string
+	subscribeTopic string
+	statusTopic    string
+	configPath     string
+	receiver       receiveFunc
 }
 
 func NewMqttConnection(properties MqttProperties) (*MqttConnection, error) {
 	mc := &MqttConnection{}
 	mc.qos = properties.Qos
 	mc.retain = properties.Retain
+	if len(properties.BaseTopic) == 0 {
+		mc.baseTopic = topicBase
+	} else {
+		mc.baseTopic = properties.BaseTopic
+	}
+	mc.setTopic = mc.baseTopic + "/set/"
+	mc.subscribeTopic = mc.setTopic + "+"
+	mc.statusTopic = mc.baseTopic + "/status"
 	mc.receiver = properties.Receiver
 
 	opts := MQTT.NewClientOptions().
 		AddBroker(properties.Url).
 		SetClientID(properties.ClientId).
 		SetCleanSession(true).
-		SetBinaryWill(topicStatus, []byte("Offline"), qosAtMostOnce, retainMessages).
+		SetBinaryWill(mc.statusTopic, []byte("Offline"), qosAtMostOnce, retainMessage).
 		SetAutoReconnect(true).
 		SetConnectionLostHandler(func(c MQTT.Client, err error) {
 			mc.handleConnectionLost(err)
@@ -68,7 +78,7 @@ func NewMqttConnection(properties MqttProperties) (*MqttConnection, error) {
 		log.Fatal().Err(token.Error()).Msg("MQTT connection failed")
 	}
 
-	token = mc.mqttClient.Publish(topicStatus, qosExactlyOnce, retainMessages, "Online")
+	token = mc.mqttClient.Publish(mc.statusTopic, qosExactlyOnce, retainMessage, "Online")
 	if !token.WaitTimeout(connectionTimeout) || token.Error() != nil {
 		log.Error().Err(token.Error()).Msg("Failed to publish LWT status")
 	}
@@ -85,28 +95,28 @@ func (mc MqttConnection) handleConnect(c MQTT.Client) {
 
 	// subscribe only if receiver provided
 	if mc.receiver != nil {
-		log.Info().Str("topic", topicSubscribe).Msg("Subscribing to")
+		log.Info().Str("topic", mc.subscribeTopic).Msg("Subscribing to")
 
-		token := c.Subscribe(topicSubscribe, qosExactlyOnce, mc.receiveMqtt)
+		token := c.Subscribe(mc.subscribeTopic, qosExactlyOnce, mc.receiveMqtt)
 		if !token.WaitTimeout(connectionTimeout) || token.Error() != nil {
-			log.Error().Err(token.Error()).Str("topic", topicSubscribe).Msg("Subscription failed")
+			log.Error().Err(token.Error()).Str("topic", mc.subscribeTopic).Msg("Subscription failed")
 		}
 	}
 }
 
 func (mc MqttConnection) receiveMqtt(client MQTT.Client, msg MQTT.Message) {
 	topic := msg.Topic()
-	if strings.HasPrefix(topic, topicSet) {
-		key := strings.TrimPrefix(topic, topicSet)
+	if strings.HasPrefix(topic, mc.setTopic) {
+		key := strings.TrimPrefix(topic, mc.setTopic)
 		value := string(msg.Payload())
 		mc.receiver(key, value)
 	}
 }
 
-func (mc MqttConnection) Publish(category, key, value string, retain bool) {
+func (mc MqttConnection) Publish(category, key, value string) {
 	var topic string
-	topic = topicBase + category + "/" + key
-	token := mc.mqttClient.Publish(topic, mc.qos, retain, value)
+	topic = mc.baseTopic + "/" + category + "/" + key
+	token := mc.mqttClient.Publish(topic, mc.qos, mc.retain, value)
 	if !token.WaitTimeout(connectionTimeout) || token.Error() != nil {
 		log.Error().Err(token.Error()).Msgf("Failed to publish to %s", topic)
 	}

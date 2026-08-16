@@ -88,5 +88,5 @@ func publishParameters() {
 	jsonStr := string(jsonBytes)
 	log.Debug().Msgf("Parameters: %s", jsonStr)
 
-	publisher(deviceName, "parameters", jsonStr, false)
+	publisher(deviceName, "parameters", jsonStr)
 }

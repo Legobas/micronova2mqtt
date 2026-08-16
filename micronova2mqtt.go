@@ -63,9 +63,9 @@ func receiveMqttMessage(key string, value string) {
 	log.Debug().Msgf("MQTT message received: %s=%s", key, value)
 }
 
-func publishMqttMessage(category, key, value string, retain bool) {
+func publishMqttMessage(category, key, value string) {
 	if mqttConn != nil {
-		mqttConn.Publish(category, key, value, retain)
+		mqttConn.Publish(category, key, value)
 	}
 }
 
@@ -84,6 +84,7 @@ func main() {
 	mqttProperties.Password = dataMgr.Config.Mqtt.Password
 	mqttProperties.Qos = byte(dataMgr.Config.Mqtt.Qos)
 	mqttProperties.Retain = dataMgr.Config.Mqtt.Retain
+	mqttProperties.BaseTopic = dataMgr.Config.Mqtt.BaseTopic
 	mqttProperties.Receiver = receiveMqttMessage
 	mqttConn, err = mqtt.NewMqttConnection(mqttProperties)
 	if err != nil {

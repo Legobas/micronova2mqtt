@@ -50,7 +50,7 @@ type parameter struct {
 	text       string
 }
 
-type publishFunc func(category, key, value string, retain bool)
+type publishFunc func(category, key, value string)
 
 var offsets []int
 var parameters []parameter

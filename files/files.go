@@ -20,11 +20,12 @@ const (
 )
 
 type Mqtt struct {
-	Url      string `yaml:"url"`
-	Username string `yaml:"username"` // default = ""
-	Password string `yaml:"password"` // default = ""
-	Qos      int    `yaml:"qos"`      // default = 0 (AtMostOnce)
-	Retain   bool   `yaml:"retain"`   // default = false
+	Url       string `yaml:"url"`
+	Username  string `yaml:"username"`   // default = ""
+	Password  string `yaml:"password"`   // default = ""
+	Qos       int    `yaml:"qos"`        // default = 0 (AtMostOnce)
+	Retain    bool   `yaml:"retain"`     // default = false
+	BaseTopic string `yaml:"base_topic"` // default = ""
 }
 
 type Power struct {

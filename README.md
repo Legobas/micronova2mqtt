@@ -90,23 +90,24 @@ micronova:
 
 ## Configuration options
 
-| Config item               | Description                                                              |
-| ------------------------- | ------------------------------------------------------------------------ |
-| **mqtt**                  |                                                                          |
-| $~~$ url                  | MQTT Server URL                                                          |
-| $~~$ username/password    | MQTT Server Credentials (can be omitted)                                 |
-| $~~$ qos                  | MQTT Server Quality Of Service                                           |
-| $~~$ retain               | MQTT Server Retain messages                                              |
+| Config item               | Description                                      | Default               |
+| ------------------------- | -------------------------------------------------|---------------------- |
+| **mqtt**                  |                                                  |                       |
+| $~~$ url                  | MQTT Server URL                                  |                       |
+| $~~$ username/password    | MQTT Server Credentials (can be omitted)         | empty                 |
+| $~~$ qos                  | MQTT Server Quality Of Service                   | 0 (AtMostOnce)        |
+| $~~$ retain               | MQTT Server Retain messages                      | false                 |
+| $~~$ base_topic           | MQTT base topic for Micronova2MQTT MQTT messages | micronova2mqtt        |
 | **micronova**             |                                                                          |
-| $~~$ brand                | Pellet stove brand / app                                                 |
-| $~~$ email                | User email address                                                       |
-| $~~$ password             | User password                                                            |
-| $~~$ **power**            | on/off secrets                                                           |
-| $~~~~$ on                 | Secret for the `On` switch                                               |
-| $~~~~$ off                | Secret for the `Off` switch                                              |
-| $~~$ **reg_keys**         | RegKey translations                                                      |
-| $~~~~$ key                | Parameter RegKey                                                         |
-| $~~~~$ title              | Rename/translate parameter to JSON field name                            |
+| $~~$ brand                | Pellet stove brand / app                         |                       |
+| $~~$ email                | User email address                               |                       |
+| $~~$ password             | User password                                    |                       |
+| $~~$ **power**            | on/off secrets                                   |                       |
+| $~~~~$ on                 | Secret for the `On` switch                       | on                    |
+| $~~~~$ off                | Secret for the `Off` switch                      | off                   |
+| $~~$ **reg_keys**         | Define set of relevant RegKeys with customized titles                    |
+| $~~~~$ key                | Parameter RegKey                                 |                       |
+| $~~~~$ title              | Rename/translate parameter to JSON field name    |                       |
 
 ## Environment variables
 
