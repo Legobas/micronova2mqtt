@@ -42,7 +42,7 @@ Supported [brands](brands.yml):
 
 ### Intelligent Configuration & Setup
 * Automatic UUID creation and registration
-* Simplified configuration — only specify the Brand; customer code and API URL are sourced from brands.yml
+* Simplified configuration — only specify the Brand; the customer code and API URL are sourced from brands.yml
 * Reduced RegKeys set - Option to use only relevant Micronova RegKeys with customized titles
 
 ### Performance & Session Management
@@ -145,6 +145,59 @@ These on/off values can be used by sending the MQTT messages:
 
 The session data is stored in the file `session.dat`.
 This file is encrypted because it contains sensitive data like the JWT tokens.
+
+## Optimalisations
+
+* If the device is active (the pellet stove is burning), the current values will be read every 20 seconds.
+If the device is not active the period between read actions will be 30 minutes (Don't hammer the API).
+After a set operation the parameters will be updated.
+
+## Extended sample micronova2mqtt.yml Configuration file
+
+```yml
+mqtt:
+    url: mqttbroker:1883
+    username: test
+    password: pass
+micronova:
+    brand: alfaplam
+    email: user@mail.com
+    password: 'SecretP@ssw'
+    power:
+        on: secret1
+        off: secret2
+    reg_keys:
+    reg_keys:
+        - key: status_get
+          title: Status
+        - key: alarms_get
+          title: Alarm
+        - key: power_set
+          title: SetPower
+        - key: temp_air_set
+          title: Thermostat
+        - key: temp_air_get
+          title: TempRoom
+        - key: temp_gas_flue_get
+          title: TempFlueGas
+        - key: vent_main_set
+          title: SetVentilationSpeed
+        - key: vent_front_get
+          title: Ventilation
+```
+
+## Building and running
+
+Build with:
+
+    go build -ldflags "-X main.Version=1.0.0"
+
+The `micronova2mqtt.yml` file has to exist in one of the following locations:
+
+ * A `data` directory in de filesystem root: `/data/micronova2mqtt.yml` (used for the docker image)
+ * A `.data` directory in the user home directory `~/.data/micronova2mqtt.yml`
+ * The current working directory
+ * A `data` directory in the current working directory
 
 ## The Brands file
 
