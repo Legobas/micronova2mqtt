@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -88,11 +89,11 @@ func deviceList() {
 				state = stateOffline
 			}
 
-			deviceName = device.Name
-			publisher(device.Name, "description", device.Description)
-			publisher(device.Name, "product", device.ProductName)
-			publisher(device.Name, "creationDate", fmt.Sprintf("%v", device.CreationDate))
-			publisher(device.Name, "online", fmt.Sprintf("%v", device.Online))
+			deviceName = strings.ReplaceAll(device.Name, " ", "_")
+			publisher(deviceName, "description", device.Description)
+			publisher(deviceName, "product", device.ProductName)
+			publisher(deviceName, "creationDate", fmt.Sprintf("%v", device.CreationDate))
+			publisher(deviceName, "online", fmt.Sprintf("%v", device.Online))
 
 			break
 		}
