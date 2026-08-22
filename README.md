@@ -167,7 +167,6 @@ micronova:
         on: secret1
         off: secret2
     reg_keys:
-    reg_keys:
         - key: status_get
           title: Status
         - key: alarms_get
