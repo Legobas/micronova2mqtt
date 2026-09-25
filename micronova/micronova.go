@@ -130,7 +130,7 @@ func Run(dataManager *files.DataManager, customercode string, apidomain string, 
 		// Publish the device parameters on MQTT Topic
 		publishParameters()
 
-		// Wait short time (20 sec) if device active or amount of cycles if inactive
+		// Wait short time (30 sec) if device active or amount of cycles if inactive
 		for range maxInactiveCycles {
 			time.Sleep(durationActive)
 			if isActive() || updateMqtt || state == stateNotResponding {

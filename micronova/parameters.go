@@ -65,7 +65,6 @@ func isActive() bool {
 			}
 		}
 	}
-	log.Warn().Msg("status_get not found, unable to detect if device is active")
 	return false
 }
 
