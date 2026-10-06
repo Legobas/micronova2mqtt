@@ -33,6 +33,22 @@ type Power struct {
 	Off string `yaml:"off"`
 }
 
+type ActionTrigger struct {
+	GetKey       string `yaml:"get_key"`
+	MinimumValue int    `yaml:"min_value"`
+}
+
+type ActionSetValues struct {
+	SetKey string `yaml:"set_key"`
+	Value  int    `yaml:"value"`
+}
+
+type Action struct {
+	Title     string            `yaml:"title"`
+	Trigger   ActionTrigger     `yaml:"trigger"`
+	SetValues []ActionSetValues `yaml:"set_values"`
+}
+
 type RegKey struct {
 	Key   string `yaml:"key"`
 	Title string `yaml:"title"`
@@ -43,6 +59,7 @@ type Micronova struct {
 	Email    string   `yaml:"email"`
 	Password string   `yaml:"password"`
 	Power    Power    `yaml:"power"`
+	Actions  []Action `yaml:"actions"`
 	RegKeys  []RegKey `yaml:"reg_keys"`
 }
 
