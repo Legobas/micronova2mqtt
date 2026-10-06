@@ -106,6 +106,13 @@ micronova:
 | $~~$ **power**            | on/off secrets                                   |                       |
 | $~~~~$ on                 | Secret for the `On` switch                       | on                    |
 | $~~~~$ off                | Secret for the `Off` switch                      | off                   |
+| $~~$ **actions**          | set values if threshold is reached               |                       |
+| $~~~~$ **trigger**        |                                                  |                       |
+| $~~~~~~$ get_key          | Get*** RegKey                                    |                       |
+| $~~~~~~$ min_value        | Minimum value, threshold                         |                       |
+| $~~~~$ **set_values**     |                                                  |                       |
+| $~~~~~~$ set_key          | Set*** RegKey                                    |                       |
+| $~~~~~~$ value            | Value to set                                     |                       |
 | $~~$ **reg_keys**         | Define set of relevant RegKeys with customized titles                    |
 | $~~~~$ key                | Parameter RegKey                                 |                       |
 | $~~~~$ title              | Rename/translate parameter to JSON field name    |                       |
