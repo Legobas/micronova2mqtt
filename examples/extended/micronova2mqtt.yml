@@ -1,0 +1,64 @@
+mqtt:
+    url: mosquitto:1883
+    username: MyMqttUser
+    password: MyMqttPassword
+    qos: 2
+    retain: true
+    base_topic: my_micronova
+micronova:
+    brand: alfaplam
+    email: MyMicronovaEmailAddress
+    password: MyMicronovaPassword
+    power:
+        on: secret1
+        off: secret2
+    actions:
+        - title: "Power on values"
+          trigger:
+              get_key: status_get
+              min_value: 1
+          set_values:
+              - set_key: power_set
+                value: 5
+              - set_key: temp_air_set
+                value: 26
+              - set_key: vent_main_set
+                value: 2
+              - set_key: canalization_1_set
+                value: 2
+        - title: "reduce power if chimney is 190 degrees or higher"
+          trigger:
+              get_key: temp_gas_flue_get
+              min_value: 190
+          set_values:
+              - set_key: power_set
+                value: 1
+              - set_key: vent_main_set
+                value: 1
+              - set_key: canalization_1_set
+                value: 1
+    reg_keys:
+        - key: alarms_get
+          title: Alarm
+        - key: status_get
+          title: Status
+        - key: power_set
+          title: SetPower
+        - key: real_power_get
+          title: ActualPower
+        - key: temp_air_set
+          title: Thermostat
+        - key: temp_air_get
+          title: TempRoom
+        - key: temp_gas_flue_get
+          title: TempFlueGas
+        - key: temp_board_get
+          title: TempBoard
+        - key: vent_main_set
+          title: SetVentilationSpeed
+        - key: vent_front_get
+          title: VentilationFront
+        - key: vent_front2_get
+          title: VentilationBack
+        - key: canalization_1_set
+          title: SetCanalisationSpeed

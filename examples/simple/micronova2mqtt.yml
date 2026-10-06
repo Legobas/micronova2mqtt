@@ -1,0 +1,8 @@
+mqtt:
+    url: mosquitto:1883
+    username: MyMqttUser
+    password: MyMqttPassword
+micronova:
+    brand: alfaplam
+    email: MyMicronovaEmailAddress
+    password: MyMicronovaPassword
