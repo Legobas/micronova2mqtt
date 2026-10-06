@@ -44,6 +44,7 @@ Supported [brands](brands.yml):
 * Automatic UUID creation and registration
 * Simplified configuration — only specify the Brand; the customer code and API URL are sourced from brands.yml
 * Reduced RegKeys set - Option to use only relevant Micronova RegKeys with customized titles
+* Actions - Set specific values if a threshold is reached
 
 ### Performance & Session Management
 * Smart token handling with automatic storage and refresh
@@ -75,7 +76,7 @@ services:
 
 The settings of Micronova2Mqtt are defined by the `micronova2mqtt.yml` yaml configuration file.
 
-## Example micronova2mqtt.yml Configuration file
+## Example of a simple micronova2mqtt.yml Configuration file
 
 ```yml
 mqtt:
@@ -151,6 +152,52 @@ This file is encrypted because it contains sensitive data like the JWT tokens.
 * If the device is active (the pellet stove is burning), the current values will be read every 20 seconds.
 If the device is not active the period between read actions will be 30 minutes (Don't hammer the API).
 After a set operation the parameters will be updated.
+
+## Actions
+
+**Automated Startup Optimization**
+
+Pellet stove manufacturers often provide specific startup recommendations, some stoves have ignition sequences that should be followed exactly.
+This process can be automated using the Actions feature to reduce power once the chimney reaches optimal operating temperature. This eliminates manual monitoring during the critical startup phase.
+
+### Manual Startup Process
+
+Before configuring automation, understand the recommended steps:
+
+1. **Start at medium-high power** to establish draft safely
+2. **Monitor chimney temperature** as the stove reaches operating temperature
+3. **Reduce to desired power level** once the chimney reaches **190°C**
+
+### Why 190°C?
+
+The **190°C threshold** serves as a reliable indicator of safe, stable operation:
+
+- Confirms adequate draft and complete combustion
+- Hot enough to prevent condensation and creosote buildup in the chimney
+- Well below dangerous overheating temperatures
+- Signals the stove is ready for reduced power settings
+
+### Automating with Actions
+
+This startup sequence can be fully automated through the Actions configuration. The stove will automatically reduce power when the flue gas temperature reaches 190°C:
+
+```yaml
+micronova:
+    actions:
+        - title: "Reduce power when chimney reaches 190°C"
+          trigger:
+              get_key: temp_gas_flue_get
+              min_value: 190
+          set_values:
+              - set_key: power_set
+                value: 1
+              - set_key: vent_main_set
+                value: 1
+              - set_key: canalization_1_set
+                value: 1
+```
+
+**Note:** Always refer to your stove's manual for manufacturer-specific startup recommendations and ignition sequences, as procedures vary by model.
 
 ## Extended sample micronova2mqtt.yml Configuration file
 
