@@ -36,7 +36,7 @@ func login() {
 		log.Fatal().Msg("Failed to build Login request")
 	}
 
-	log.Info().Msgf("API Call: %s", loginPath)
+	log.Debug().Msgf("API Call: %s", loginPath)
 
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)

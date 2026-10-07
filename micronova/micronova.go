@@ -63,12 +63,21 @@ var dm *files.DataManager
 var customerCode string
 var apiDomain string
 var publisher publishFunc
+var actions ActionsHolder
 
 func Run(dataManager *files.DataManager, customercode string, apidomain string, publishfunc publishFunc) {
 	dm = dataManager
 	customerCode = customercode
 	apiDomain = apidomain
 	publisher = publishfunc
+
+	for _, action := range dm.Config.Micronova.Actions {
+		setValues := ""
+		for _, setValue := range action.SetValues {
+			setValues += setValue.SetKey + "=" + strconv.Itoa(setValue.Value) + " "
+		}
+		log.Info().Msgf("Action: %s >= %d  -->  %s", action.Trigger.GetKey, action.Trigger.MinimumValue, setValues)
+	}
 
 	for {
 		// Signup - Register app UUID
@@ -125,6 +134,11 @@ func Run(dataManager *files.DataManager, customercode string, apidomain string, 
 
 			// Read the device parameters
 			readDevice()
+
+			// run actions
+			if state == stateActive {
+				actions.Process(dm.Config.Micronova.Actions)
+			}
 		}
 
 		// Publish the device parameters on MQTT Topic
@@ -154,38 +168,53 @@ func SetPower(command string) {
 	switch command {
 	case powerOn:
 		writeDevice(statusManagedGet, statusManagedOn, statusManagedMask)
+		actions.reset()
 		log.Info().Msg("Power On")
 	case powerOff:
 		writeDevice(statusManagedGet, statusManagedOff, statusManagedMask)
+		actions.reset()
 		log.Info().Msg("Power Off")
 	default:
 		log.Warn().Msgf("Invalid power value: %s", command)
 	}
 }
 
-func SetParameter(key string, value string) {
-	for _, par := range parameters {
-		if key == par.title {
-			val, err := strconv.Atoi(value)
+func SetParameterByTitle(title string, val string) {
+	for _, param := range parameters {
+		if title == param.title {
+			value, err := strconv.Atoi(val)
 			if err != nil {
 				log.Error().Msgf("Incorrect parameter: %v", err)
 				return
 			}
-			if val > par.maximum {
-				log.Error().Msgf("%s value %s is greater than maximum (%d)", key, value, par.maximum)
-				return
-			}
-			if val < par.minimum {
-				log.Error().Msgf("%s value %s is lower than minimum (%d)", key, value, par.minimum)
-				return
-			}
-			log.Info().Msgf("MQTT request: Set Parameter %s to %s", key, value)
-
-			// Send the device parameter to Micronova
-			writeDevice(par.offset, val, par.mask)
-			return
+			setParameter(param, value)
+			break
 		}
 	}
+}
+
+func SetParameterByRegKey(key string, value int) {
+	for _, par := range parameters {
+		if par.regKey == key {
+			setParameter(par, value)
+			break
+		}
+	}
+}
+
+func setParameter(param parameter, value int) {
+	if value > param.maximum {
+		log.Error().Msgf("%s value %d is greater than maximum (%d)", param.title, value, param.maximum)
+		return
+	}
+	if value < param.minimum {
+		log.Error().Msgf("%s value %d is lower than minimum (%d)", param.title, value, param.minimum)
+		return
+	}
+	log.Info().Msgf("MQTT request: Set Parameter %s to %d", param.title, value)
+
+	// Send the device parameter to Micronova
+	writeDevice(param.offset, value, param.mask)
 }
 
 func SetUpdateMqtt(update bool) {

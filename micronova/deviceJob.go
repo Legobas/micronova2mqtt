@@ -54,7 +54,7 @@ func deviceJob(requestId string) bool {
 		log.Fatal().Msg("Failed to build DeviceJob request")
 	}
 
-	log.Info().Msgf("API Call: %s%s", deviceJobPath, requestId)
+	log.Debug().Msgf("API Call: %s%s", deviceJobPath, requestId)
 
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)

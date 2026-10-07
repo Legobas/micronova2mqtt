@@ -78,7 +78,7 @@ func deviceInfo() {
 		log.Fatal().Msg("Failed to build DeviceInfo request")
 	}
 
-	log.Info().Msgf("API Call: %s", deviceInfoPath)
+	log.Debug().Msgf("API Call: %s", deviceInfoPath)
 
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)

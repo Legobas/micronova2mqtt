@@ -44,7 +44,6 @@ type ActionSetValues struct {
 }
 
 type Action struct {
-	Title     string            `yaml:"title"`
 	Trigger   ActionTrigger     `yaml:"trigger"`
 	SetValues []ActionSetValues `yaml:"set_values"`
 }

@@ -73,7 +73,7 @@ func TestSetParameterAboveMaximum(t *testing.T) {
 		},
 	}
 
-	SetParameter("setting", "100")
+	SetParameterByTitle("setting", "100")
 	// Should fail gracefully as 100 > 50
 }
 
@@ -90,7 +90,7 @@ func TestSetParameterBelowMinimum(t *testing.T) {
 		},
 	}
 
-	SetParameter("setting", "5")
+	SetParameterByTitle("setting", "5")
 	// Should fail gracefully as 5 < 10
 }
 
@@ -107,7 +107,7 @@ func TestSetParameterInvalidValue(t *testing.T) {
 		},
 	}
 
-	SetParameter("setting", "not_a_number")
+	SetParameterByTitle("setting", "not_a_number")
 	// Should fail gracefully on parsing error
 }
 
@@ -124,7 +124,7 @@ func TestSetParameterNotFound(t *testing.T) {
 		},
 	}
 
-	SetParameter("nonexistent_param", "50")
+	SetParameterByTitle("nonexistent_param", "50")
 	// Should fail gracefully without panicking
 }
 
@@ -141,7 +141,7 @@ func TestSetParameterNegativeValue(t *testing.T) {
 		},
 	}
 
-	SetParameter("setting", "-5")
+	SetParameterByTitle("setting", "-5")
 	// Should fail as -5 < minimum of 0
 }
 
@@ -252,6 +252,6 @@ func BenchmarkSetParameter(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		SetParameter("temperature", "50")
+		SetParameterByTitle("temperature", "50")
 	}
 }

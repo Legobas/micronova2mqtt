@@ -42,7 +42,7 @@ func readDevice() {
 		log.Fatal().Msg("Failed to build ReadDevice request")
 	}
 
-	log.Info().Msgf("API Call: %s -->", readDevicePath)
+	log.Debug().Msgf("API Call: %s -->", readDevicePath)
 
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)

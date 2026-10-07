@@ -57,7 +57,7 @@ func receiveMqttMessage(key string, value string) {
 		// Switch device on/off
 		micronova.SetPower(value)
 	} else {
-		micronova.SetParameter(key, value)
+		micronova.SetParameterByTitle(key, value)
 	}
 	micronova.SetUpdateMqtt(true)
 	log.Debug().Msgf("MQTT message received: %s=%s", key, value)

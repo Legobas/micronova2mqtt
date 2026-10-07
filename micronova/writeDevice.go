@@ -42,7 +42,7 @@ func writeDevice(item int, value int, mask int) {
 		log.Fatal().Msg("Failed to build WriteDevice request")
 	}
 
-	log.Info().Msgf("API Call: %s -->", writeDevicePath)
+	log.Debug().Msgf("API Call: %s -->", writeDevicePath)
 
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)

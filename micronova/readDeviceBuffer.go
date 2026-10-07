@@ -30,7 +30,7 @@ func readDeviceBuffer() {
 		log.Fatal().Msg("Failed to build ReadDeviceBuffer request")
 	}
 
-	log.Info().Msgf("API Call: %s -->", readDeviceBufferPath)
+	log.Debug().Msgf("API Call: %s -->", readDeviceBufferPath)
 
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)

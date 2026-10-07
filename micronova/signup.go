@@ -44,7 +44,7 @@ func signup() {
 		log.Fatal().Msg("Failed to build Signup request")
 	}
 
-	log.Info().Msgf("API Call: %s", signupPath)
+	log.Debug().Msgf("API Call: %s", signupPath)
 
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)

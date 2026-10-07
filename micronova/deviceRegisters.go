@@ -120,7 +120,7 @@ func deviceRegisters() {
 		log.Fatal().Msg("Failed to build DeviceRegisters request")
 	}
 
-	log.Info().Msgf("API Call: %s", deviceRegistersPath)
+	log.Debug().Msgf("API Call: %s", deviceRegistersPath)
 
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)

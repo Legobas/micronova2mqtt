@@ -53,7 +53,7 @@ func deviceList() {
 		log.Fatal().Msg("Failed to build DeviceList request")
 	}
 
-	log.Info().Msgf("API Call: %s", devicesPath)
+	log.Debug().Msgf("API Call: %s", devicesPath)
 
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)

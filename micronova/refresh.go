@@ -33,7 +33,7 @@ func updateToken() error {
 		log.Fatal().Msg("Failed to build RefreshToken request")
 	}
 
-	log.Info().Msgf("API Call: %s", refreshPath)
+	log.Debug().Msgf("API Call: %s", refreshPath)
 
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)
