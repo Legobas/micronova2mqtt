@@ -186,13 +186,25 @@ The **190°C threshold** serves as a reliable indicator of safe, stable operatio
 
 ### Automating with Actions
 
-This startup sequence can be fully automated through the Actions configuration. The stove will automatically reduce power when the flue gas temperature reaches 190°C:
+This startup sequence can be fully automated through the Actions configuration. 
+The stove will set to high power on ignition and automatically reduce power when the flue gas temperature reaches 190°C:
 
 ```yaml
 micronova:
     actions:
-        - title: "Reduce power when chimney reaches 190°C"
-          trigger:
+        - trigger:
+              get_key: status_get
+              min_value: 1
+          set_values:
+              - set_key: power_set
+                value: 4
+              - set_key: temp_air_set
+                value: 21
+              - set_key: vent_main_set
+                value: 3
+              - set_key: canalization_1_set
+                value: 2
+        - trigger:
               get_key: temp_gas_flue_get
               min_value: 190
           set_values:
