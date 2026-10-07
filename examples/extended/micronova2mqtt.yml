@@ -13,8 +13,7 @@ micronova:
         on: secret1
         off: secret2
     actions:
-        - title: "Power on values"
-          trigger:
+        - trigger:
               get_key: status_get
               min_value: 1
           set_values:
@@ -26,8 +25,7 @@ micronova:
                 value: 2
               - set_key: canalization_1_set
                 value: 2
-        - title: "reduce power if chimney is 190 degrees or higher"
-          trigger:
+        - trigger:
               get_key: temp_gas_flue_get
               min_value: 190
           set_values:
