@@ -108,11 +108,11 @@ micronova:
 | $~~~~$ off                | Secret for the `Off` switch                      | off                   |
 | $~~$ **actions**          | set values if threshold is reached               |                       |
 | $~~~~$ **trigger**        |                                                  |                       |
-| $~~~~~~$ get_key          | Get*** RegKey                                    |                       |
+| $~~~~~~$ get_key          | Get*** RegKey to read                            |                       |
 | $~~~~~~$ min_value        | Minimum value, threshold                         |                       |
 | $~~~~$ **set_values**     |                                                  |                       |
-| $~~~~~~$ set_key          | Set*** RegKey                                    |                       |
-| $~~~~~~$ value            | Value to set                                     |                       |
+| $~~~~~~$ set_key          | Set*** RegKey to write                           |                       |
+| $~~~~~~$ value            | Target value                                     |                       |
 | $~~$ **reg_keys**         | Define set of relevant RegKeys with customized titles                    |
 | $~~~~$ key                | Parameter RegKey                                 |                       |
 | $~~~~$ title              | Rename/translate parameter to JSON field name    |                       |
