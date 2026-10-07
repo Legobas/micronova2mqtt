@@ -187,7 +187,7 @@ The **190°C threshold** serves as a reliable indicator of safe, stable operatio
 ### Automating with Actions
 
 This startup sequence can be fully automated through the Actions configuration. 
-The stove will set to high power on ignition and automatically reduce power when the flue gas temperature reaches 190°C:
+On ignition, the stove will operate at high power, then automatically reduce its output when the flue-gas temperature reaches 190°C.
 
 ```yaml
 micronova:
