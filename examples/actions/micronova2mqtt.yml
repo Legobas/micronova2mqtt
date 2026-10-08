@@ -1,0 +1,32 @@
+mqtt:
+    url: mosquitto:1883
+    username: MyMqttUser
+    password: MyMqttPassword
+micronova:
+    brand: alfaplam
+    email: MyMicronovaEmailAddress
+    password: MyMicronovaPassword
+    log_reg_keys: true
+    actions:
+        - trigger:
+              get_key: status_get
+              min_value: 1
+          set_values:
+              - set_key: power_set
+                value: 4
+              - set_key: temp_air_set
+                value: 21
+              - set_key: vent_main_set
+                value: 3
+              - set_key: canalization_1_set
+                value: 2
+        - trigger:
+              get_key: temp_gas_flue_get
+              min_value: 190
+          set_values:
+              - set_key: power_set
+                value: 1
+              - set_key: vent_main_set
+                value: 1
+              - set_key: canalization_1_set
+                value: 1
