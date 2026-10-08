@@ -45,7 +45,7 @@ func (auto *ActionsHolder) Process(actions []files.Action) {
 			for _, setValue := range action.SetValues {
 				SetParameterByRegKey(setValue.SetKey, setValue.Value)
 			}
-			log.Debug().Msgf("Action activated: %s", triggerAct)
+			log.Info().Msgf("Action activated: %s", triggerAct)
 			activated = append(activated, triggerAct)
 		}
 	}

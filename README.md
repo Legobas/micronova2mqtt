@@ -43,7 +43,8 @@ Supported [brands](brands.yml):
 ### Intelligent Configuration & Setup
 * Automatic UUID creation and registration
 * Simplified configuration — only specify the Brand; the customer code and API URL are sourced from brands.yml
-* Reduced RegKeys set - Option to use only relevant Micronova RegKeys with customized titles
+* Reduced RegKeys set - option to use only relevant Micronova RegKeys
+* RegKey translation - change sometimes strange Italian RegKey names to customized meaningful titles
 * Actions - Set specific values if a threshold is reached
 
 ### Performance & Session Management
@@ -106,6 +107,7 @@ micronova:
 | $~~$ **power**            | on/off secrets                                   |                       |
 | $~~~~$ on                 | Secret for the `On` switch                       | on                    |
 | $~~~~$ off                | Secret for the `Off` switch                      | off                   |
+| $~~$ log_reg_keys         | Show all available RegKeys in the log            | false
 | $~~$ **actions**          | set values if threshold is reached               |                       |
 | $~~~~$ **trigger**        |                                                  |                       |
 | $~~~~~~$ get_key          | Get*** RegKey to read                            |                       |
@@ -154,11 +156,11 @@ These on/off values can be used by sending the MQTT messages:
 The session data is stored in the file `session.dat`.
 This file is encrypted because it contains sensitive data like the JWT tokens.
 
-## Optimalisations
+## Optimizations
 
 * If the device is active (the pellet stove is burning), the current values will be read every 20 seconds.
 If the device is not active the period between read actions will be 30 minutes (Don't hammer the API).
-After a set operation the parameters will be updated.
+After a MQTT set operation the parameters are updated immediately.
 
 ## Actions
 
@@ -218,7 +220,48 @@ micronova:
 
 **Note:** Always refer to your stove's manual for manufacturer-specific startup recommendations and ignition sequences, as procedures vary by model.
 
-## Extended sample micronova2mqtt.yml Configuration file
+## RegKey minimization and translation
+
+Using only the necessary RegKeys can significantly reduce memory usage and MQTT/network traffic.
+RegKeys can also be given clearer, more meaningful names — for example, replacing Italian names such as giri_estrattore_get and ore_lavoro_par_get with descriptive English equivalents.
+
+```yml
+micronova:
+    reg_keys:
+        - key: status_get
+          title: Status
+        - key: alarms_get
+          title: Alarm
+        - key: giri_estrattore_get
+          title: Extractor Rotation Speed
+        - key: ore_lavoro_par_get
+          title: Operating Hours
+```
+
+## How do I know which RegKeys are available?
+
+If the config parameter `log_reg_keys` is to `true` all available RegKeys will be written to the log once after the service is started.
+
+```yml
+micronova:
+    log_reg_keys: true
+```
+
+Check the log:
+
+```bash
+docker compose logs micronova2mqtt | grep RegKey:
+```
+
+Example output:
+
+```
+INFO   RegKey: alarms_enable
+INFO   RegKey: alarms_get
+...
+```
+
+## Extended example micronova2mqtt.yml Configuration file
 
 ```yml
 mqtt:
@@ -232,6 +275,18 @@ micronova:
     power:
         on: secret1
         off: secret2
+    log_reg_keys: true
+    actions:
+        - trigger:
+              get_key: temp_gas_flue_get
+              min_value: 190
+          set_values:
+              - set_key: power_set
+                value: 1
+              - set_key: vent_main_set
+                value: 1
+              - set_key: canalization_1_set
+                value: 1
     reg_keys:
         - key: status_get
           title: Status

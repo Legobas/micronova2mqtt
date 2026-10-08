@@ -188,6 +188,10 @@ func deviceRegisters() {
 			}
 			parameters = append(parameters, param)
 		}
+
+		if dm.Config.Micronova.LogRegKeys {
+			log.Info().Msgf("RegKey: %s", reg.RegKey)
+		}
 	}
 
 	for _, par := range parameters {

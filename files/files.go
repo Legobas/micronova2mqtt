@@ -54,12 +54,13 @@ type RegKey struct {
 }
 
 type Micronova struct {
-	Brand    string   `yaml:"brand"`
-	Email    string   `yaml:"email"`
-	Password string   `yaml:"password"`
-	Power    Power    `yaml:"power"`
-	Actions  []Action `yaml:"actions"`
-	RegKeys  []RegKey `yaml:"reg_keys"`
+	Brand      string   `yaml:"brand"`
+	Email      string   `yaml:"email"`
+	Password   string   `yaml:"password"`
+	Power      Power    `yaml:"power"`
+	LogRegKeys bool     `yaml:"log_reg_keys"`
+	Actions    []Action `yaml:"actions"`
+	RegKeys    []RegKey `yaml:"reg_keys"`
 }
 
 type Config struct {
