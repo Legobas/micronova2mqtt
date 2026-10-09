@@ -1,38 +1,38 @@
 mqtt:
-    url: mosquitto:1883
-    username: MyMqttUser
-    password: MyMqttPassword
+  url: mosquitto:1883
+  username: MyMqttUser
+  password: MyMqttPassword
 micronova:
-    brand: alfaplam
-    email: MyMicronovaEmailAddress
-    password: MyMicronovaPassword
-    log_reg_keys: true
-    reg_keys:
-        - key: alarms_get
-          title: Alarm
-        - key: status_get
-          title: Status
-        - key: giri_estrattore_get
-          title: Extractor Rotation Speed
-        - key: ore_lavoro_par_get
-          title: Operating Hours
-        - key: power_set
-          title: SetPower
-        - key: real_power_get
-          title: ActualPower
-        - key: temp_air_set
-          title: Thermostat
-        - key: temp_air_get
-          title: TempRoom
-        - key: temp_gas_flue_get
-          title: TempFlueGas
-        - key: temp_board_get
-          title: TempBoard
-        - key: vent_main_set
-          title: SetVentilationSpeed
-        - key: vent_front_get
-          title: VentilationFront
-        - key: vent_front2_get
-          title: VentilationBack
-        - key: canalization_1_set
-          title: SetCanalisationSpeed
+  brand: alfaplam
+  email: MyMicronovaEmailAddress
+  password: MyMicronovaPassword
+  log_reg_keys: true
+  reg_keys:
+    - key: alarms_get
+      title: Alarm
+    - key: status_get
+      title: Status
+    - key: giri_estrattore_get
+      title: Extractor Rotation Speed
+    - key: ore_lavoro_par_get
+      title: Operating Hours
+    - key: power_set
+      title: SetPower
+    - key: real_power_get
+      title: ActualPower
+    - key: temp_air_set
+      title: Thermostat
+    - key: temp_air_get
+      title: TempRoom
+    - key: temp_gas_flue_get
+      title: TempFlueGas
+    - key: temp_board_get
+      title: TempBoard
+    - key: vent_main_set
+      title: SetVentilationSpeed
+    - key: vent_front_get
+      title: VentilationFront
+    - key: vent_front2_get
+      title: VentilationBack
+    - key: canalization_1_set
+      title: SetCanalisationSpeed

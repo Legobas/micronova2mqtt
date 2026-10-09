@@ -7,7 +7,7 @@ COPY ./go.* ./
 RUN --mount=type=cache,target=/gomod-cache \
   go mod download
 COPY . ./
-ARG VERSION=1.0.0
+ARG VERSION=v0.0.1
 RUN --mount=type=cache,target=/gomod-cache --mount=type=cache,target=/go-cache \
   go build -ldflags "-X main.Version=${VERSION}" -o app .
 

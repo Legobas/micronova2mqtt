@@ -174,9 +174,9 @@ Switching the pellet stove On or Off can be done by sending the MQTT messages:
 To make these values less obvious they can be obfuscated by setting the config settings:
 
     micronova:
-        power:
-            on:  secret1
-            off: secret2
+      power:
+        on:  secret1
+        off: secret2
 
 These on/off values can be used by sending the MQTT messages:
 
@@ -217,29 +217,29 @@ On ignition, the stove will operate at high power, then automatically reduce its
 
 ```yaml
 micronova:
-    actions:
-        - trigger:
-              get_key: status_get
-              min_value: 1
-          set_values:
-              - set_key: power_set
-                value: 4
-              - set_key: temp_air_set
-                value: 21
-              - set_key: vent_main_set
-                value: 3
-              - set_key: canalization_1_set
-                value: 2
-        - trigger:
-              get_key: temp_gas_flue_get
-              min_value: 190
-          set_values:
-              - set_key: power_set
-                value: 1
-              - set_key: vent_main_set
-                value: 1
-              - set_key: canalization_1_set
-                value: 1
+  actions:
+    - trigger:
+        get_key: status_get
+        min_value: 1
+      set_values:
+        - set_key: power_set
+          value: 4
+        - set_key: temp_air_set
+          value: 21
+        - set_key: vent_main_set
+          value: 3
+        - set_key: canalization_1_set
+          value: 2
+    - trigger:
+        get_key: temp_gas_flue_get
+        min_value: 190
+      set_values:
+        - set_key: power_set
+          value: 1
+        - set_key: vent_main_set
+          value: 1
+        - set_key: canalization_1_set
+          value: 1
 ```
 
 **Note:** Always refer to your stove's manual for manufacturer-specific startup recommendations and ignition sequences, as procedures vary by model.
@@ -252,15 +252,15 @@ If you use actions, include their RegKeys in the reduced parameter list; otherwi
 
 ```yml
 micronova:
-    reg_keys:
-        - key: status_get
-          title: Status
-        - key: alarms_get
-          title: Alarm
-        - key: giri_estrattore_get
-          title: Extractor Rotation Speed
-        - key: ore_lavoro_par_get
-          title: Operating Hours
+  reg_keys:
+    - key: status_get
+      title: Status
+    - key: alarms_get
+      title: Alarm
+    - key: giri_estrattore_get
+      title: Extractor Rotation Speed
+    - key: ore_lavoro_par_get
+      title: Operating Hours
 ```
 
 ## How do I know which RegKeys are available?
@@ -290,45 +290,45 @@ INFO   RegKey: alarms_get
 
 ```yml
 mqtt:
-    url: mqttbroker:1883
-    username: test
-    password: pass
+  url: mqttbroker:1883
+  username: test
+  password: pass
 micronova:
-    brand: alfaplam
-    email: user@mail.com
-    password: 'SecretP@ssw'
-    power:
-        on: secret1
-        off: secret2
-    log_reg_keys: true
-    actions:
-        - trigger:
-              get_key: temp_gas_flue_get
-              min_value: 190
-          set_values:
-              - set_key: power_set
-                value: 1
-              - set_key: vent_main_set
-                value: 1
-              - set_key: canalization_1_set
-                value: 1
-    reg_keys:
-        - key: status_get
-          title: Status
-        - key: alarms_get
-          title: Alarm
-        - key: power_set
-          title: SetPower
-        - key: temp_air_set
-          title: Thermostat
-        - key: temp_air_get
-          title: TempRoom
-        - key: temp_gas_flue_get
-          title: TempFlueGas
-        - key: vent_main_set
-          title: SetVentilationSpeed
-        - key: vent_front_get
-          title: Ventilation
+  brand: alfaplam
+  email: user@mail.com
+  password: 'SecretP@ssw'
+  power:
+    on: secret1
+    off: secret2
+  log_reg_keys: true
+  actions:
+    - trigger:
+        get_key: temp_gas_flue_get
+        min_value: 190
+      set_values:
+        - set_key: power_set
+          value: 1
+        - set_key: vent_main_set
+          value: 1
+        - set_key: canalization_1_set
+          value: 1
+  reg_keys:
+    - key: status_get
+      title: Status
+    - key: alarms_get
+      title: Alarm
+    - key: power_set
+      title: SetPower
+    - key: temp_air_set
+      title: Thermostat
+    - key: temp_air_get
+      title: TempRoom
+    - key: temp_gas_flue_get
+      title: TempFlueGas
+    - key: vent_main_set
+      title: SetVentilationSpeed
+    - key: vent_front_get
+      title: Ventilation
 ```
 
 ## Building and running
