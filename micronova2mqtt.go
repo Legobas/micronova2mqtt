@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	appName  = "micronova2mqtt"
+	appName  = "Micronova2MQTT"
 	powerKey = "Power"
 )
 
@@ -49,7 +49,7 @@ func init() {
 	}
 
 	// Print Application with version
-	log.Info().Msgf("%s %s", strings.ToUpper(appName), Version)
+	log.Info().Msgf("%s %s", appName, Version)
 }
 
 func receiveMqttMessage(key string, value string) {

@@ -85,7 +85,7 @@ func publishParameters() {
 		return
 	}
 	jsonStr := string(jsonBytes)
-	log.Debug().Msgf("Parameters: %s", jsonStr)
+	log.Debug().Msgf("MQTT message: %s", jsonStr)
 
 	publisher(deviceName, "parameters", jsonStr)
 }
