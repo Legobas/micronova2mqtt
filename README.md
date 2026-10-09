@@ -123,7 +123,6 @@ Supported [brands](brands.yml):
 
 These are all possible options for the `micronova2mqtt.yml` yaml configuration file:
 
-```markdown
 - `mqtt` — MQTT connection settings
   - `url` — MQTT server URL (**required**)
   - `username` / `password` — MQTT server credentials; may be omitted (default: empty)
@@ -149,7 +148,6 @@ These are all possible options for the `micronova2mqtt.yml` yaml configuration f
   - `reg_keys` — RegKeys to include, with optional customized titles
     - `key` — Parameter RegKey
     - `title` — Rename or translate the parameter’s JSON field name
-```
 
 ## Environment variables
 
