@@ -110,10 +110,10 @@ micronova:
 | $~~$ log_reg_keys         | Show all available RegKeys in the log            | false
 | $~~$ **actions**          | set values if threshold is reached               |                       |
 | $~~~~$ **trigger**        |                                                  |                       |
-| $~~~~~~$ get_key          | Get*** RegKey to read                            |                       |
+| $~~~~~~$ get_key          | ****_get RegKey to read                          |                       |
 | $~~~~~~$ min_value        | Minimum value, threshold                         |                       |
 | $~~~~$ **set_values**     |                                                  |                       |
-| $~~~~~~$ set_key          | Set*** RegKey to write                           |                       |
+| $~~~~~~$ set_key          | ****_set RegKey to write                         |                       |
 | $~~~~~~$ value            | Target value                                     |                       |
 | $~~$ **reg_keys**         | Define set of relevant RegKeys with customized titles                    |
 | $~~~~$ key                | Parameter RegKey                                 |                       |
