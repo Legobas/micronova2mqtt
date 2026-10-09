@@ -50,7 +50,7 @@ Supported [brands](brands.yml):
 ### Performance & Session Management
 * Smart token handling with automatic storage and refresh
 * Persistent storage of Product ID and Device ID minimizes API calls across sessions
-* Minimal API usage — calls are limited to once per hour during device inactivity
+* Minimal API usage — calls are limited to once per 90 minutes during device inactivity
 
 ### Security
 * Encrypted session data protecting sensitive tokens
@@ -149,7 +149,7 @@ These are all possible options for the `micronova2mqtt.yml` yaml configuration f
   - `reg_keys` — RegKeys to include, with optional customized titles
     - `key` — Parameter RegKey
     - `title` — Rename or translate the parameter’s JSON field name
----
+```
 
 ## Environment variables
 
@@ -191,7 +191,7 @@ This file is encrypted because it contains sensitive data like the JWT tokens.
 ## Optimizations
 
 * If the device is active (the pellet stove is burning), the current values will be read every 20 seconds.
-If the device is not active the period between read actions will be 30 minutes (Don't hammer the API).
+If the device is not active the period between read actions will be 90 minutes (don't hammer the API).
 After a MQTT set operation the parameters are updated immediately.
 * Using only necessary RegKeys can significantly reduce memory usage and MQTT/network traffic.
 
