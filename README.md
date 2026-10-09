@@ -54,79 +54,109 @@ Supported [brands](brands.yml):
 
 ### Security
 * Encrypted session data protecting sensitive tokens
-* Configurable custom MQTT payload values to switch the pallet stove On/Off - a non-standard 'on' or 'off' value adds extra security
+* Configurable custom MQTT payload values to switch the pellet stove On/Off - a non-standard 'on' or 'off' value adds extra security
 
-## Installation
+## Quick start
 
-Docker compose example:
+1. Create a directory for the configuration and session data:
 
-```yml
-services:
-  Micronova2MQTT:
-    image: legobas/micronova2mqtt:latest
-    container_name: micronova2mqtt
-    environment:
-      - LOGLEVEL=info
-      - TZ=Europe/London
-    volumes:
-      - /home/legobas/micronova2mqtt:/data:rw
-    restart: unless-stopped
-```
+   ```bash
+   mkdir -p /home/legobas/micronova2mqtt
+   ```
 
+2. Create `/home/legobas/micronova2mqtt/micronova2mqtt.yml` with your MQTT broker details and Micronova account credentials:
+
+   ```yaml
+   mqtt:
+     url: mqttbroker:1883
+     username: your_mqtt_username
+     password: your_mqtt_password
+
+   micronova:
+     brand: your_pellet_stove_brand
+     email: you@example.com
+     password: 'your_micronova_password'
+   ```
+
+3. Save this as `compose.yml`:
+
+   ```yaml
+   services:
+     micronova2mqtt:
+       image: legobas/micronova2mqtt:latest
+       container_name: micronova2mqtt
+       environment:
+         - LOGLEVEL=info
+         - TZ=Europe/London
+       volumes:
+         - /home/legobas/micronova2mqtt:/data:rw
+       restart: unless-stopped
+   ```
+
+   Start the container from the directory containing `compose.yml`:
+
+   ```bash
+   docker compose up -d
+   ```
+
+4. Check startup logs:
+
+   ```bash
+   docker compose logs -f micronova2mqtt
+   ```
+
+   Look for successful MQTT and Micronova connections. To list available RegKeys, set `log_reg_keys: true` under `micronova` in the config, then restart the container.
+
+5. Confirm MQTT messages are arriving. Subscribe to the configured base topic (default: `micronova2mqtt`) using an MQTT client or broker console. You can also send a Power command:
+
+   ```bash
+   mosquitto_sub -h mqttbroker -t 'micronova2mqtt/#' -v
+   ```
+
+   ```bash
+   mosquitto_pub -h mqttbroker -t 'micronova2mqtt/set/Power' -m 'on'
+   ```
+
+   Replace `mqttbroker` with your broker’s hostname. Use `on`/`off` unless you configured custom Power values.
+   
 ## Configuration
 
-The settings of Micronova2Mqtt are defined by the `micronova2mqtt.yml` yaml configuration file.
+This are all possible options for the `micronova2mqtt.yml` yaml configuration file:
 
-## Example of a simple micronova2mqtt.yml Configuration file
+- `mqtt` — MQTT connection settings
+  - `url` — MQTT server URL (**required**)
+  - `username` / `password` — MQTT server credentials; may be omitted (default: empty)
+  - `qos` — MQTT Quality of Service (default: `0`, `AtMostOnce`)
+  - `retain` — Retain MQTT messages (default: `false`)
+  - `base_topic` — Base topic for Micronova2MQTT messages (default: `micronova2mqtt`)
 
-```yml
-mqtt:
-    url: mqttbroker:1883
-    username: test
-    password: pass
-micronova:
-    brand: alfaplam
-    email: user@mail.com
-    password: 'SecretP@ssw'
-```
-
-## Configuration options
-
-| Config item               | Description                                      | Default               |
-| ------------------------- | -------------------------------------------------|---------------------- |
-| **mqtt**                  |                                                  |                       |
-| $~~$ url                  | MQTT Server URL                                  |                       |
-| $~~$ username/password    | MQTT Server Credentials (can be omitted)         | empty                 |
-| $~~$ qos                  | MQTT Server Quality Of Service                   | 0 (AtMostOnce)        |
-| $~~$ retain               | MQTT Server Retain messages                      | false                 |
-| $~~$ base_topic           | MQTT base topic for Micronova2MQTT MQTT messages | micronova2mqtt        |
-| **micronova**             |                                                                          |
-| $~~$ brand                | Pellet stove brand / app                         |                       |
-| $~~$ email                | User email address                               |                       |
-| $~~$ password             | User password                                    |                       |
-| $~~$ **power**            | on/off secrets                                   |                       |
-| $~~~~$ on                 | Secret for the `On` switch                       | on                    |
-| $~~~~$ off                | Secret for the `Off` switch                      | off                   |
-| $~~$ log_reg_keys         | Show all available RegKeys in the log            | false                 |
-| $~~$ **actions**          | Actions to set values if threshold is reached    |                       |
-| $~~~~$ **trigger**        | Trigger point for action                         |                       |
-| $~~~~~~$ get_key          | `****_get` RegKey to read                        |                       |
-| $~~~~~~$ min_value        | Minimum value, threshold                         |                       |
-| $~~~~$ **set_values**     | Values to set on action execution                |                       |
-| $~~~~~~$ set_key          | `****_set` RegKey to write                       |                       |
-| $~~~~~~$ value            | Target value                                     |                       |
-| $~~$ **reg_keys**         | Define set of relevant RegKeys with customized titles                    |
-| $~~~~$ key                | Parameter RegKey                                 |                       |
-| $~~~~$ title              | Rename/translate parameter to JSON field name    |                       |
+- `micronova` — Micronova account and device settings
+  - `brand` — Pellet stove brand or app (**required**)
+  - `email` — User email address (**required**)
+  - `password` — User password (**required**)
+  - `power` — Power-switch payload values
+    - `on` — Payload for the `On` switch (default: `on`)
+    - `off` — Payload for the `Off` switch (default: `off`)
+  - `log_reg_keys` — Log all available RegKeys at startup (default: `false`)
+  - `actions` — Actions to run when a threshold is reached
+    - `trigger` — Trigger condition
+      - `get_key` — `****_get` RegKey to read
+      - `min_value` — Minimum threshold value
+    - `set_values` — Values to set when the action runs
+      - `set_key` — `****_set` RegKey to write
+      - `value` — Target value
+  - `reg_keys` — RegKeys to include, with optional customized titles
+    - `key` — Parameter RegKey
+    - `title` — Rename or translate the parameter’s JSON field name
 
 ## Environment variables
 
 The logging level can be defined by environment variable `LOGLEVEL`:
 
 ```
-LOGLEVEL = INFO (default)
-LOGLEVEL = DEBUG
-LOGLEVEL = ERROR
+LOGLEVEL = info (default)
+LOGLEVEL = debug
+LOGLEVEL = error
 ```
 
 ## Security
@@ -178,15 +208,6 @@ Before configuring automation, understand the recommended steps:
 2. **Monitor chimney temperature** as the stove reaches operating temperature
 3. **Reduce to desired power level** once the chimney reaches **190°C**
 
-### Why 190°C?
-
-The **190°C threshold** serves as a reliable indicator of safe, stable operation:
-
-- Confirms adequate draft and complete combustion
-- Hot enough to prevent condensation and creosote buildup in the chimney
-- Well below dangerous overheating temperatures
-- Signals the stove is ready for reduced power settings
-
 ### Automating with Actions
 
 This startup sequence can be fully automated through the Actions configuration. 
@@ -225,6 +246,7 @@ micronova:
 
 Using only the necessary RegKeys can significantly reduce memory usage and MQTT/network traffic.
 RegKeys can also be given clearer, more meaningful names — for example, replacing Italian names such as giri_estrattore_get and ore_lavoro_par_get with descriptive English equivalents.
+If Actions are used must the Actions RegKeys be included in the reduced parameters list, otherwise the actions won't work!
 
 ```yml
 micronova:
@@ -241,7 +263,7 @@ micronova:
 
 ## How do I know which RegKeys are available?
 
-If the config parameter `log_reg_keys` is to `true` all available RegKeys will be written to the log once after the service is started.
+If the config parameter `log_reg_keys` is set to `true` all available RegKeys will be written to the log once after the service is started.
 
 ```yml
 micronova:
@@ -322,7 +344,7 @@ The `micronova2mqtt.yml` file has to exist in one of the following locations:
 
 ## The Brands file
 
-To use micronova2mqtt with a new Pellet Stove brand copy the [brands](brands.yml) file to your data directory and add your Pellet Stove brand. The app-name, customer-code and domain URL have to be provided.
+To use Micronova2MQTT with a new Pellet Stove brand copy the [brands](brands.yml) file to your data directory and add your Pellet Stove brand. The app-name, customer-code and domain URL have to be provided.
 If this works for you please create a pull request so other owners of the same brand can benefit from it.
 
 ## Inspired by:
