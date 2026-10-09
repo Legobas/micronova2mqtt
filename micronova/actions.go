@@ -20,7 +20,6 @@ func (auto *ActionsHolder) reset() {
 
 func (auto *ActionsHolder) Process(actions []files.Action) {
 	auto.actions = actions
-	log.Debug().Msgf("Actions: %v", auto.actions)
 
 	for _, action := range actions {
 		triggerKey := action.Trigger.GetKey
@@ -39,6 +38,8 @@ func (auto *ActionsHolder) Process(actions []files.Action) {
 				break
 			}
 		}
+
+		log.Debug().Msgf("%s=%d <--> %d", triggerKey, realValue, triggerValue)
 
 		// set action values
 		if realValue >= triggerValue {
