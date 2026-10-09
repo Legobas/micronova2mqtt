@@ -49,7 +49,7 @@ Supported [brands](brands.yml):
 
 ### Performance & Session Management
 * Smart token handling with automatic storage and refresh
-* Persistent storing of Product ID and Device ID minimizes API calls across sessions
+* Persistent storage of Product ID and Device ID minimizes API calls across sessions
 * Minimal API usage — calls are limited to once per hour during device inactivity
 
 ### Security
@@ -121,8 +121,9 @@ Supported [brands](brands.yml):
    
 ## Configuration
 
-This are all possible options for the `micronova2mqtt.yml` yaml configuration file:
+These are all possible options for the `micronova2mqtt.yml` yaml configuration file:
 
+```markdown
 - `mqtt` — MQTT connection settings
   - `url` — MQTT server URL (**required**)
   - `username` / `password` — MQTT server credentials; may be omitted (default: empty)
@@ -148,6 +149,7 @@ This are all possible options for the `micronova2mqtt.yml` yaml configuration fi
   - `reg_keys` — RegKeys to include, with optional customized titles
     - `key` — Parameter RegKey
     - `title` — Rename or translate the parameter’s JSON field name
+---
 
 ## Environment variables
 
@@ -246,7 +248,7 @@ micronova:
 
 Using only the necessary RegKeys can significantly reduce memory usage and MQTT/network traffic.
 RegKeys can also be given clearer, more meaningful names — for example, replacing Italian names such as giri_estrattore_get and ore_lavoro_par_get with descriptive English equivalents.
-If Actions are used must the Actions RegKeys be included in the reduced parameters list, otherwise the actions won't work!
+If you use actions, include their RegKeys in the reduced parameter list; otherwise, the actions won’t work!
 
 ```yml
 micronova:
@@ -337,14 +339,15 @@ Build with:
 
 The `micronova2mqtt.yml` file has to exist in one of the following locations:
 
- * A `data` directory in de filesystem root: `/data/micronova2mqtt.yml` (used for the docker image)
+ * A `data` directory in the filesystem root: `/data/micronova2mqtt.yml` (used for the docker image)
  * A `.data` directory in the user home directory `~/.data/micronova2mqtt.yml`
  * The current working directory
  * A `data` directory in the current working directory
 
 ## The Brands file
 
-To use Micronova2MQTT with a new Pellet Stove brand copy the [brands](brands.yml) file to your data directory and add your Pellet Stove brand. The app-name, customer-code and domain URL have to be provided.
+To use Micronova2MQTT with a new pellet stove brand copy the [brands](brands.yml) file to your data directory and add your brand.
+The app-name, customer-code and domain URL have to be provided.
 If this works for you please create a pull request so other owners of the same brand can benefit from it.
 
 ## Inspired by:
