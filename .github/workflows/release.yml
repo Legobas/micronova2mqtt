@@ -31,7 +31,9 @@ jobs:
           go-version: '>=1.20'
   
       - name: Build
-        run: go build -v ./...
+        env:
+          VERSION: ${{ steps.next_version.outputs.version }}
+        run: go build -ldflags "-X main.Version=${VERSION}" -v ./...  
   
       - name: Test
         run: go test -v ./...
