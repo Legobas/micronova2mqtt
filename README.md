@@ -67,7 +67,7 @@ services:
     container_name: micronova2mqtt
     environment:
       - LOGLEVEL=info
-      - TZ=America/New_York
+      - TZ=Europe/London
     volumes:
       - /home/legobas/micronova2mqtt:/data:rw
     restart: unless-stopped
