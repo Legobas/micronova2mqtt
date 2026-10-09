@@ -107,13 +107,13 @@ micronova:
 | $~~$ **power**            | on/off secrets                                   |                       |
 | $~~~~$ on                 | Secret for the `On` switch                       | on                    |
 | $~~~~$ off                | Secret for the `Off` switch                      | off                   |
-| $~~$ log_reg_keys         | Show all available RegKeys in the log            | false
-| $~~$ **actions**          | set values if threshold is reached               |                       |
-| $~~~~$ **trigger**        |                                                  |                       |
-| $~~~~~~$ get_key          | ****_get RegKey to read                          |                       |
+| $~~$ log_reg_keys         | Show all available RegKeys in the log            | false                 |
+| $~~$ **actions**          | Actions to set values if threshold is reached    |                       |
+| $~~~~$ **trigger**        | Trigger point for action                         |                       |
+| $~~~~~~$ get_key          | `****_get` RegKey to read                        |                       |
 | $~~~~~~$ min_value        | Minimum value, threshold                         |                       |
-| $~~~~$ **set_values**     |                                                  |                       |
-| $~~~~~~$ set_key          | ****_set RegKey to write                         |                       |
+| $~~~~$ **set_values**     | Values to set on action execution                |                       |
+| $~~~~~~$ set_key          | `****_set` RegKey to write                       |                       |
 | $~~~~~~$ value            | Target value                                     |                       |
 | $~~$ **reg_keys**         | Define set of relevant RegKeys with customized titles                    |
 | $~~~~$ key                | Parameter RegKey                                 |                       |
@@ -121,7 +121,7 @@ micronova:
 
 ## Environment variables
 
-The logging level can be defined by environment variable LOGLEVEL:
+The logging level can be defined by environment variable `LOGLEVEL`:
 
 ```
 LOGLEVEL = INFO (default)
@@ -161,6 +161,7 @@ This file is encrypted because it contains sensitive data like the JWT tokens.
 * If the device is active (the pellet stove is burning), the current values will be read every 20 seconds.
 If the device is not active the period between read actions will be 30 minutes (Don't hammer the API).
 After a MQTT set operation the parameters are updated immediately.
+* Using only necessary RegKeys can significantly reduce memory usage and MQTT/network traffic.
 
 ## Actions
 
