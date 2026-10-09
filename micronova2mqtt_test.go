@@ -118,7 +118,7 @@ func TestPowerKey_Constant(t *testing.T) {
 
 // TestAppName_Constant tests the app name constant
 func TestAppName_Constant(t *testing.T) {
-	expected := "micronova2mqtt"
+	expected := "Micronova2MQTT"
 	if appName != expected {
 		t.Errorf("AppName constant = %q, want %q", appName, expected)
 	}
