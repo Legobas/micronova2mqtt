@@ -142,6 +142,7 @@ These are all possible options for the `micronova2mqtt.yml` yaml configuration f
     - `trigger` — Trigger condition
       - `get_key` — `****_get` RegKey to read
       - `min_value` — Minimum threshold value
+      - `max_value` — Maximum threshold value
     - `set_values` — Values to set when the action runs
       - `set_key` — `****_set` RegKey to write
       - `value` — Target value
@@ -218,7 +219,8 @@ micronova:
   actions:
     - trigger:
         get_key: status_get
-        min_value: 1
+        min_value: 2
+        max_value: 3
       set_values:
         - set_key: power_set
           value: 4
@@ -231,6 +233,7 @@ micronova:
     - trigger:
         get_key: temp_gas_flue_get
         min_value: 190
+        max_value: 200
       set_values:
         - set_key: power_set
           value: 1
@@ -279,9 +282,8 @@ docker compose logs micronova2mqtt | grep RegKey:
 Example output:
 
 ```
-INFO   RegKey: alarms_enable
-INFO   RegKey: alarms_get
-...
+INFO   RegKey: real_power_get Min=0, Max=5
+INFO   RegKey: status_get     Min=0, Max=255 0=Off 1=Ignition 2=Awaiting flame 3=Starting 4=On 5=Cleaning 6=Shut Off 7=Stand-by 8=Alarm 9=Mem. Alarm ...
 ```
 
 ## Extended example micronova2mqtt.yml Configuration file
@@ -303,6 +305,7 @@ micronova:
     - trigger:
         get_key: temp_gas_flue_get
         min_value: 190
+        max_value: 200
       set_values:
         - set_key: power_set
           value: 1

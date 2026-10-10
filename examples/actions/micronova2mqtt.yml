@@ -10,7 +10,8 @@ micronova:
   actions:
     - trigger:
       get_key: status_get
-      min_value: 1
+        min_value: 2
+        max_value: 3
       set_values:
         - set_key: power_set
           value: 4
@@ -22,7 +23,8 @@ micronova:
           value: 2
     - trigger:
       get_key: temp_gas_flue_get
-      min_value: 190
+        min_value: 190
+        max_value: 200
       set_values:
         - set_key: power_set
           value: 1

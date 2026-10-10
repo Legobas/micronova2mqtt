@@ -172,7 +172,6 @@ func SetPower(command string) {
 		log.Info().Msg("Power On")
 	case powerOff:
 		writeDevice(statusManagedGet, statusManagedOff, statusManagedMask)
-		actions.reset()
 		log.Info().Msg("Power Off")
 	default:
 		log.Warn().Msgf("Invalid power value: %s", command)

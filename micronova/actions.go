@@ -1,9 +1,9 @@
 package micronova
 
 import (
+	"fmt"
 	"micronova2mqtt/files"
 	"slices"
-	"strconv"
 
 	"github.com/rs/zerolog/log"
 )
@@ -23,31 +23,31 @@ func (auto *ActionsHolder) Process(actions []files.Action) {
 
 	for _, action := range actions {
 		triggerKey := action.Trigger.GetKey
-		triggerValue := action.Trigger.MinimumValue
-		triggerAct := triggerKey + "=" + strconv.Itoa(triggerValue)
+		triggerMinValue := action.Trigger.MinimumValue
+		triggerMaxValue := action.Trigger.MaximumValue
+		triggerAct := fmt.Sprintf("%s is between %d and %d", triggerKey, triggerMinValue, triggerMaxValue)
 		// check if action is already activated
-		if slices.Contains(activated, triggerAct) {
-			continue
-		}
+		if !slices.Contains(activated, triggerAct) {
+			// get real value
+			var realValue = 0
+			for _, par := range parameters {
+				if par.regKey == triggerKey {
+					realValue = par.value
+					break
+				}
+			}
 
-		// get real value
-		var realValue = 0
-		for _, par := range parameters {
-			if par.regKey == triggerKey {
-				realValue = par.value
+			log.Debug().Msgf("Action: %s, real value: %d", triggerAct, realValue)
+
+			// set action values
+			if realValue >= triggerMinValue && realValue <= triggerMaxValue {
+				for _, setValue := range action.SetValues {
+					SetParameterByRegKey(setValue.SetKey, setValue.Value)
+				}
+				log.Info().Msgf("Action activated: %s", triggerAct)
+				activated = append(activated, triggerAct)
 				break
 			}
-		}
-
-		log.Debug().Msgf("%s=%d <--> %d", triggerKey, realValue, triggerValue)
-
-		// set action values
-		if realValue >= triggerValue {
-			for _, setValue := range action.SetValues {
-				SetParameterByRegKey(setValue.SetKey, setValue.Value)
-			}
-			log.Info().Msgf("Action activated: %s", triggerAct)
-			activated = append(activated, triggerAct)
 		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -167,6 +168,7 @@ func deviceRegisters() {
 				}
 			}
 		}
+		var valueOptions string
 		if selected && (reg.RegType == "SET" || reg.RegType == "GET") {
 			param := parameter{
 				regKey:  reg.RegKey,
@@ -183,6 +185,7 @@ func deviceRegisters() {
 					if encval.Lang == ValueLanguage {
 						valueDescr := valueDescr{int(encval.Value), encval.Description}
 						param.valueDescr = append(param.valueDescr, valueDescr)
+						valueOptions += fmt.Sprintf("%d=%s ", int(encval.Value), encval.Description)
 					}
 				}
 			}
@@ -190,7 +193,8 @@ func deviceRegisters() {
 		}
 
 		if dm.Config.Micronova.LogRegKeys {
-			log.Info().Msgf("RegKey: %s", reg.RegKey)
+			valueOptions = fmt.Sprintf("Min=%d, Max=%d %s", reg.SetMin, reg.SetMax, valueOptions)
+			log.Info().Msgf("RegKey: %-30s %s", reg.RegKey, valueOptions)
 		}
 	}
 

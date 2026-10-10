@@ -36,6 +36,7 @@ type Power struct {
 type ActionTrigger struct {
 	GetKey       string `yaml:"get_key"`
 	MinimumValue int    `yaml:"min_value"`
+	MaximumValue int    `yaml:"max_value"`
 }
 
 type ActionSetValues struct {
@@ -168,6 +169,11 @@ func (dm DataManager) validateConfig() error {
 	}
 	if dm.Config.Micronova.Password == "" {
 		return errors.New("Micronova password is mandatory")
+	}
+	for _, action := range dm.Config.Micronova.Actions {
+		if action.Trigger.MinimumValue > action.Trigger.MaximumValue {
+			return errors.New(action.Trigger.GetKey + ": Minimum Value must be lower or equal to Maximum value")
+		}
 	}
 	return nil
 }
