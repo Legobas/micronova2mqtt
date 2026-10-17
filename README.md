@@ -114,7 +114,7 @@ Supported [brands](brands.yml):
    ```
 
    ```bash
-   mosquitto_pub -h mqttbroker -t 'micronova2mqtt/set/Power' -m 'on'
+   mosquitto_pub -h mqttbroker -t 'micronova2mqtt/<device>/command/power' -m 'on'
    ```
 
    Replace `mqttbroker` with your broker’s hostname. Use `on`/`off` unless you configured custom Power values.
@@ -167,8 +167,8 @@ LOGLEVEL = error
 The default values to switch the pellet stove are `on` and `off`.
 Switching the pellet stove On or Off can be done by sending the MQTT messages:
 
-    micronova2mqtt/set/Power = on
-    micronova2mqtt/set/Power = off
+    micronova2mqtt/<device>/command/power = on
+    micronova2mqtt/<device>/command/power = off
 
 To make these values less obvious they can be obfuscated by setting the config settings:
 
@@ -179,8 +179,8 @@ To make these values less obvious they can be obfuscated by setting the config s
 
 These on/off values can be used by sending the MQTT messages:
 
-    micronova2mqtt/set/Power = secret1
-    micronova2mqtt/set/Power = secret2
+    micronova2mqtt/<device>/command/power = secret1
+    micronova2mqtt/<device>/command/power = secret2
 
 ### Session storage
 
@@ -191,8 +191,19 @@ This file is encrypted because it contains sensitive data like the JWT tokens.
 
 * If the device is active (the pellet stove is burning), the current values will be read every 20 seconds.
 If the device is not active the period between read actions will be 90 minutes (don't hammer the API).
-After a MQTT set operation the parameters are updated immediately.
+After a MQTT command operation the parameters are updated immediately.
 * Using only necessary RegKeys can significantly reduce memory usage and MQTT/network traffic.
+
+## Home Assistant
+
+Micronova2MQTT can register the device as Home Assistant components by sending MQTT discovery messages.
+
+Add this to the Config:
+
+```yaml
+homeassistant:
+  discovery: true
+```
 
 ## Actions
 

@@ -8,44 +8,46 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var activated []string
-
 type ActionsHolder struct {
-	actions []files.Action
+	actions              []files.Action
+	activated            []string
+	getCalculated        func(value int, formulaStr string) float64
+	setParameterByRegKey func(key string, value int)
+	parameters           *[]parameter
 }
 
-func (auto *ActionsHolder) reset() {
-	activated = []string{}
+func (holder *ActionsHolder) reset() {
+	holder.activated = []string{}
 }
 
-func (auto *ActionsHolder) Process(actions []files.Action) {
-	auto.actions = actions
+func (holder *ActionsHolder) Process(actions []files.Action) {
+	holder.actions = actions
 
 	for _, action := range actions {
 		triggerKey := action.Trigger.GetKey
 		triggerMinValue := action.Trigger.MinimumValue
 		triggerMaxValue := action.Trigger.MaximumValue
-		triggerAct := fmt.Sprintf("%s is between %d and %d", triggerKey, triggerMinValue, triggerMaxValue)
+		triggerAct := fmt.Sprintf("%s >= %.1f & <= %.1f", triggerKey, triggerMinValue, triggerMaxValue)
 		// check if action is already activated
-		if !slices.Contains(activated, triggerAct) {
+		if !slices.Contains(holder.activated, triggerAct) {
 			// get real value
-			var realValue = 0
-			for _, par := range parameters {
+			var realValue float64
+			for _, par := range *holder.parameters {
 				if par.regKey == triggerKey {
-					realValue = par.value
+					realValue = par.realValue
 					break
 				}
 			}
 
-			log.Debug().Msgf("Action: %s, real value: %d", triggerAct, realValue)
+			log.Debug().Msgf("Action: %s, real value: %.1f", triggerAct, realValue)
 
 			// set action values
 			if realValue >= triggerMinValue && realValue <= triggerMaxValue {
 				for _, setValue := range action.SetValues {
-					SetParameterByRegKey(setValue.SetKey, setValue.Value)
+					holder.setParameterByRegKey(setValue.SetKey, setValue.Value)
 				}
 				log.Info().Msgf("Action activated: %s", triggerAct)
-				activated = append(activated, triggerAct)
+				holder.activated = append(holder.activated, triggerAct)
 				break
 			}
 		}

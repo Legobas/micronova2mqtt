@@ -90,10 +90,11 @@ func deviceList() {
 			}
 
 			deviceName = strings.ReplaceAll(device.Name, " ", "_")
-			publisher(deviceName, "description", device.Description)
-			publisher(deviceName, "product", device.ProductName)
-			publisher(deviceName, "creationDate", fmt.Sprintf("%v", device.CreationDate))
-			publisher(deviceName, "online", fmt.Sprintf("%v", device.Online))
+			topicStart := dm.Config.Mqtt.BaseTopic + "/" + deviceName + "/"
+			publisher.Publish(topicStart+"description", device.Description)
+			publisher.Publish(topicStart+"product", device.ProductName)
+			publisher.Publish(topicStart+"creationDate", fmt.Sprintf("%v", device.CreationDate))
+			publisher.Publish(topicStart+"online", fmt.Sprintf("%v", device.Online))
 
 			break
 		}

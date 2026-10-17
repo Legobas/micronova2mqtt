@@ -104,13 +104,9 @@ func TestNewMqttConnectionWithCustomBaseTopic(t *testing.T) {
 		retain:    false,
 		baseTopic: customBaseTopic,
 	}
-	mc.setTopic = mc.baseTopic + "/set/"
-	mc.subscribeTopic = mc.setTopic + "+"
 	mc.statusTopic = mc.baseTopic + "/status"
 
 	assert.Equal(t, "custom/topic", mc.baseTopic)
-	assert.Equal(t, "custom/topic/set/", mc.setTopic)
-	assert.Equal(t, "custom/topic/set/+", mc.subscribeTopic)
 	assert.Equal(t, "custom/topic/status", mc.statusTopic)
 }
 
@@ -123,113 +119,6 @@ func TestHandleConnectionLost(t *testing.T) {
 	assert.NotPanics(t, func() {
 		mc.handleConnectionLost(err)
 	})
-}
-
-// TestHandleConnectWithReceiver tests handleConnect when receiver is provided
-func TestHandleConnectWithReceiver(t *testing.T) {
-	mockClient := new(MockMqttClient)
-	mockToken := new(MockToken)
-
-	mockToken.On("WaitTimeout").Return(true)
-	mockToken.On("Error").Return(nil)
-	// Use mock.Anything for the callback since it's a function type
-	mockClient.On("Subscribe", "test/set/+", byte(2), mock.Anything).Return(mockToken)
-
-	mc := &MqttConnection{
-		subscribeTopic: "test/set/+",
-		receiver: func(key, value string) {
-			// Mock receiver
-		},
-	}
-
-	assert.NotPanics(t, func() {
-		mc.handleConnect(mockClient)
-	})
-
-	mockClient.AssertCalled(t, "Subscribe", "test/set/+", byte(2), mock.Anything)
-}
-
-// TestHandleConnectWithoutReceiver tests handleConnect when receiver is nil
-func TestHandleConnectWithoutReceiver(t *testing.T) {
-	mockClient := new(MockMqttClient)
-
-	mc := &MqttConnection{
-		receiver: nil,
-	}
-
-	// Should not subscribe if receiver is nil
-	assert.NotPanics(t, func() {
-		mc.handleConnect(mockClient)
-	})
-
-	mockClient.AssertNotCalled(t, "Subscribe")
-}
-
-// TestReceiveMqttWithMatchingTopic tests receiveMqtt with a matching topic
-func TestReceiveMqttWithMatchingTopic(t *testing.T) {
-	receivedKey := ""
-	receivedValue := ""
-
-	mc := &MqttConnection{
-		setTopic: "test/set/",
-		receiver: func(key, value string) {
-			receivedKey = key
-			receivedValue = value
-		},
-	}
-
-	// Create a mock message
-	mockMessage := new(mockMessage)
-	mockMessage.On("Topic").Return("test/set/temperature")
-	mockMessage.On("Payload").Return([]byte("25.5"))
-
-	mc.receiveMqtt(nil, mockMessage)
-
-	assert.Equal(t, "temperature", receivedKey)
-	assert.Equal(t, "25.5", receivedValue)
-}
-
-// TestReceiveMqttWithNonMatchingTopic tests receiveMqtt with a non-matching topic
-func TestReceiveMqttWithNonMatchingTopic(t *testing.T) {
-	callCount := 0
-
-	mc := &MqttConnection{
-		setTopic: "test/set/",
-		receiver: func(key, value string) {
-			callCount++
-		},
-	}
-
-	mockMessage := new(mockMessage)
-	mockMessage.On("Topic").Return("test/other/temperature")
-	mockMessage.On("Payload").Return([]byte("25.5"))
-
-	mc.receiveMqtt(nil, mockMessage)
-
-	assert.Equal(t, 0, callCount)
-}
-
-// TestReceiveMqttWithNestedTopic tests receiveMqtt with nested path in key
-func TestReceiveMqttWithNestedTopic(t *testing.T) {
-	receivedKey := ""
-	receivedValue := ""
-
-	mc := &MqttConnection{
-		setTopic: "test/set/",
-		receiver: func(key, value string) {
-			receivedKey = key
-			receivedValue = value
-		},
-	}
-
-	mockMessage := new(mockMessage)
-	mockMessage.On("Topic").Return("test/set/device/mode")
-	mockMessage.On("Payload").Return([]byte("auto"))
-
-	mc.receiveMqtt(nil, mockMessage)
-
-	assert.Equal(t, "device/mode", receivedKey)
-	assert.Equal(t, "auto", receivedValue)
 }
 
 // TestPublish tests the Publish function
@@ -248,7 +137,7 @@ func TestPublish(t *testing.T) {
 		retain:     true,
 	}
 
-	mc.Publish("sensors", "temperature", "25.5")
+	mc.Publish("base/sensors/temperature", "25.5")
 
 	mockClient.AssertExpectations(t)
 }
@@ -269,7 +158,7 @@ func TestPublishWithDifferentQosAndRetain(t *testing.T) {
 		retain:     false,
 	}
 
-	mc.Publish("status", "online", "true")
+	mc.Publish("mybase/status/online", "true")
 
 	mockClient.AssertExpectations(t)
 }
@@ -292,18 +181,18 @@ func TestPublishFailure(t *testing.T) {
 
 	// Should not panic even on failure
 	assert.NotPanics(t, func() {
-		mc.Publish("sensors", "temperature", "25.5")
+		mc.Publish("base/sensors/temperature", "25.5")
 	})
 }
 
-// TestPublishWithEmptyCategory tests Publish with empty category
+// TestPublishWithEmptyCategory tests Publish with empty topic
 func TestPublishWithEmptyCategory(t *testing.T) {
 	mockClient := new(MockMqttClient)
 	mockToken := new(MockToken)
 
 	mockToken.On("WaitTimeout").Return(true)
 	mockToken.On("Error").Return(nil)
-	mockClient.On("Publish", "base//key", byte(1), true, "value").Return(mockToken)
+	mockClient.On("Publish", "", byte(1), true, "value").Return(mockToken)
 
 	mc := &MqttConnection{
 		mqttClient: mockClient,
@@ -312,7 +201,7 @@ func TestPublishWithEmptyCategory(t *testing.T) {
 		retain:     true,
 	}
 
-	mc.Publish("", "key", "value")
+	mc.Publish("", "value")
 
 	mockClient.AssertExpectations(t)
 }

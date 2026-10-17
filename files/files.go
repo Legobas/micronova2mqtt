@@ -13,6 +13,7 @@ import (
 
 const (
 	dataDir                     = "data"
+	topicBase                   = "micronova2mqtt"
 	configFilename              = "micronova2mqtt.yml"
 	sessionFilename             = "session.dat"
 	brandsFilename              = "brands.yml"
@@ -34,9 +35,9 @@ type Power struct {
 }
 
 type ActionTrigger struct {
-	GetKey       string `yaml:"get_key"`
-	MinimumValue int    `yaml:"min_value"`
-	MaximumValue int    `yaml:"max_value"`
+	GetKey       string  `yaml:"get_key"`
+	MinimumValue float64 `yaml:"min_value"`
+	MaximumValue float64 `yaml:"max_value"`
 }
 
 type ActionSetValues struct {
@@ -64,9 +65,14 @@ type Micronova struct {
 	RegKeys    []RegKey `yaml:"reg_keys"`
 }
 
+type HomeAssistant struct {
+	Discovery bool `yaml:"discovery"`
+}
+
 type Config struct {
-	Mqtt      Mqtt      `yaml:"mqtt"`
-	Micronova Micronova `yaml:"micronova"`
+	Mqtt          Mqtt          `yaml:"mqtt"`
+	Micronova     Micronova     `yaml:"micronova"`
+	HomeAssistant HomeAssistant `yaml:"homeassistant"`
 }
 
 type Session struct {
@@ -101,6 +107,10 @@ func NewData() (*DataManager, error) {
 
 	// Load session
 	dm.loadSession() // Non-fatal if missing
+
+	if len(dm.Config.Mqtt.BaseTopic) == 0 {
+		dm.Config.Mqtt.BaseTopic = topicBase
+	}
 
 	return dm, nil
 }

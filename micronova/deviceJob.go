@@ -102,6 +102,7 @@ func deviceJob(requestId string) bool {
 			for p := 0; p < len(parameters); p++ {
 				if parameters[p].offset == offset {
 					parameters[p].value = value
+					parameters[p].realValue = getCalculated(value, parameters[p].formula)
 					parameters[p].text = getText(value, parameters[p].formula, parameters[p].format, parameters[p].valueDescr)
 				}
 			}

@@ -2,7 +2,9 @@ package micronova
 
 import (
 	"micronova2mqtt/files"
+	"micronova2mqtt/mqtt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -29,6 +31,7 @@ const (
 	statusManagedMask  = 65535
 	deviceOnline       = "Online"
 	deviceOffline      = "Offline"
+	powerCommand           = "power"
 )
 
 type valueDescr struct {
@@ -43,40 +46,62 @@ type parameter struct {
 	mask       int
 	minimum    int
 	maximum    int
+	step       int
 	value      int
 	valueDescr []valueDescr
 	formula    string
+	realValue  float64
 	format     string
 	text       string
 }
 
-type publishFunc func(category, key, value string)
+type Publisher interface {
+	Publish(topic, value string)
+	Subscribe(topic string, handler mqtt.SubscriberFunc)
+}
 
 var offsets []int
 var parameters []parameter
 
 var state int
 var updateMqtt bool
+
 var deviceName string
+var deviceSerial string
+var deviceModel string
 
 var dm *files.DataManager
 var customerCode string
 var apiDomain string
-var publisher publishFunc
+var publisher Publisher
+
+var powerOn = setPowerOn
+var powerOff = setPowerOff
 var actions ActionsHolder
 
-func Run(dataManager *files.DataManager, customercode string, apidomain string, publishfunc publishFunc) {
+func Run(dataManager *files.DataManager, customercode string, apidomain string, publishfunc Publisher) {
 	dm = dataManager
 	customerCode = customercode
 	apiDomain = apidomain
 	publisher = publishfunc
+
+	if dm.Config.Micronova.Power.On != "" {
+		powerOn = dm.Config.Micronova.Power.On
+	}
+	if dm.Config.Micronova.Power.Off != "" {
+		powerOff = dm.Config.Micronova.Power.Off
+	}
+
+	actions.getCalculated = getCalculated
+	actions.setParameterByRegKey = SetParameterByRegKey
+	actions.parameters = &parameters
 
 	for _, action := range dm.Config.Micronova.Actions {
 		setValues := ""
 		for _, setValue := range action.SetValues {
 			setValues += setValue.SetKey + "=" + strconv.Itoa(setValue.Value) + " "
 		}
-		log.Info().Msgf("Action: %s >= %d  -->  %s", action.Trigger.GetKey, action.Trigger.MinimumValue, setValues)
+		log.Info().Msgf("Action: %s >= %.1f & <=%.1f -->  %s", action.Trigger.GetKey, action.Trigger.MinimumValue, action.Trigger.MaximumValue, setValues)
 	}
 
 	for {
@@ -130,6 +155,15 @@ func Run(dataManager *files.DataManager, customercode string, apidomain string, 
 			// Get list of parameters, based on RegKeys or offsets
 			if len(parameters) == 0 {
 				deviceRegisters()
+
+				topic := dm.Config.Mqtt.BaseTopic + "/" + deviceName + "/command/+"
+				publisher.Subscribe(topic, receiveCommand)
+
+				if dm.Config.HomeAssistant.Discovery {
+					// Register with Home Assistant Discovery
+					discoveryConfig := createHAConfig(publisher)
+					discoveryConfig.Setup()
+				}
 			}
 
 			// Read the device parameters
@@ -141,8 +175,9 @@ func Run(dataManager *files.DataManager, customercode string, apidomain string, 
 			}
 		}
 
-		// Publish the device parameters on MQTT Topic
+		// Publish the device parameters and values on MQTT Topic
 		publishParameters()
+		publishValues()
 
 		// Wait short time (30 sec) if device active or amount of cycles if inactive
 		for range maxInactiveCycles {
@@ -155,24 +190,40 @@ func Run(dataManager *files.DataManager, customercode string, apidomain string, 
 	}
 }
 
+func receiveCommand(topic string, value string) {
+	lastSlashIdx := strings.LastIndex(topic, "/")
+
+	if lastSlashIdx == -1 {
+		log.Warn().Msgf("Incorrect Topic: %s", topic)
+		return
+	}
+
+	command := topic[lastSlashIdx+1:]
+
+	log.Debug().Msgf("Received command: %s=%s", command, value)
+
+	if command == powerCommand {
+		// Switch device on/off
+		SetPower(value)
+	} else {
+		SetParameterByTitle(command, value)
+	}
+	SetUpdateMqtt(true)
+}
+
 func SetPower(command string) {
-	powerOn := setPowerOn
-	powerOff := setPowerOff
-	if dm.Config.Micronova.Power.On != "" {
-		powerOn = dm.Config.Micronova.Power.On
-	}
-	if dm.Config.Micronova.Power.Off != "" {
-		powerOff = dm.Config.Micronova.Power.Off
-	}
+	topicStart := dm.Config.Mqtt.BaseTopic + "/" + deviceName + "/"
 
 	switch command {
 	case powerOn:
 		writeDevice(statusManagedGet, statusManagedOn, statusManagedMask)
 		actions.reset()
 		log.Info().Msg("Power On")
+		publisher.Publish(topicStart+"power", setPowerOn)
 	case powerOff:
 		writeDevice(statusManagedGet, statusManagedOff, statusManagedMask)
 		log.Info().Msg("Power Off")
+		publisher.Publish(topicStart+"power", setPowerOff)
 	default:
 		log.Warn().Msgf("Invalid power value: %s", command)
 	}

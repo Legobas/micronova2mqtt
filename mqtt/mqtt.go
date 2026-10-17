@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"strings"
 	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
@@ -10,14 +9,13 @@ import (
 
 const (
 	connectionTimeout = time.Second * 10
-	topicBase         = "micronova2mqtt"
 	qosAtMostOnce     = byte(0)
 	qosAtLeastOnce    = byte(1)
 	qosExactlyOnce    = byte(2)
 	retainMessage     = true
 )
 
-type receiveFunc func(key, value string)
+type SubscriberFunc func(topic string, payload string)
 
 type MqttProperties struct {
 	Url       string
@@ -27,34 +25,23 @@ type MqttProperties struct {
 	Retain    bool
 	BaseTopic string
 	ClientId  string
-	Receiver  receiveFunc
 }
 
 type MqttConnection struct {
-	mqttClient     MQTT.Client
-	qos            byte
-	retain         bool
-	baseTopic      string
-	setTopic       string
-	subscribeTopic string
-	statusTopic    string
-	configPath     string
-	receiver       receiveFunc
+	mqttClient  MQTT.Client
+	qos         byte
+	retain      bool
+	baseTopic   string
+	statusTopic string
+	configPath  string
 }
 
 func NewMqttConnection(properties MqttProperties) (*MqttConnection, error) {
 	mc := &MqttConnection{}
 	mc.qos = properties.Qos
 	mc.retain = properties.Retain
-	if len(properties.BaseTopic) == 0 {
-		mc.baseTopic = topicBase
-	} else {
-		mc.baseTopic = properties.BaseTopic
-	}
-	mc.setTopic = mc.baseTopic + "/set/"
-	mc.subscribeTopic = mc.setTopic + "+"
+	mc.baseTopic = properties.BaseTopic
 	mc.statusTopic = mc.baseTopic + "/status"
-	mc.receiver = properties.Receiver
 
 	opts := MQTT.NewClientOptions().
 		AddBroker(properties.Url).
@@ -92,32 +79,30 @@ func (mc MqttConnection) handleConnectionLost(err error) {
 
 func (mc MqttConnection) handleConnect(c MQTT.Client) {
 	log.Info().Msg("MQTT client connected")
-
-	// subscribe only if receiver provided
-	if mc.receiver != nil {
-		log.Info().Str("topic", mc.subscribeTopic).Msg("Subscribing to")
-
-		token := c.Subscribe(mc.subscribeTopic, qosExactlyOnce, mc.receiveMqtt)
-		if !token.WaitTimeout(connectionTimeout) || token.Error() != nil {
-			log.Error().Err(token.Error()).Str("topic", mc.subscribeTopic).Msg("Subscription failed")
-		}
-	}
 }
 
-func (mc MqttConnection) receiveMqtt(client MQTT.Client, msg MQTT.Message) {
-	topic := msg.Topic()
-	if strings.HasPrefix(topic, mc.setTopic) {
-		key := strings.TrimPrefix(topic, mc.setTopic)
-		value := string(msg.Payload())
-		mc.receiver(key, value)
-	}
-}
-
-func (mc MqttConnection) Publish(category, key, value string) {
-	var topic string
-	topic = mc.baseTopic + "/" + category + "/" + key
+func (mc MqttConnection) Publish(topic string, value string) {
 	token := mc.mqttClient.Publish(topic, mc.qos, mc.retain, value)
 	if !token.WaitTimeout(connectionTimeout) || token.Error() != nil {
-		log.Error().Err(token.Error()).Msgf("Failed to publish to %s", topic)
+		log.Error().Err(token.Error()).Msgf("Failed to publish raw to %s", topic)
+	}
+}
+
+func (mc *MqttConnection) Subscribe(topic string, handler SubscriberFunc) {
+	if handler == nil {
+		log.Warn().Str("topic", topic).Msg("Subscription error: no handler provided")
+		return
+	}
+
+	log.Info().Str("topic", topic).Msg("Subscribing to")
+
+	mqttCallback := func(client MQTT.Client, message MQTT.Message) {
+		handler(message.Topic(), string(message.Payload()))
+	}
+
+	token := mc.mqttClient.Subscribe(topic, qosExactlyOnce, mqttCallback)
+
+	if !token.WaitTimeout(connectionTimeout) || token.Error() != nil {
+		log.Error().Err(token.Error()).Str("topic", topic).Msg("Subscription failed")
 	}
 }

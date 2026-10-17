@@ -177,6 +177,7 @@ func deviceRegisters() {
 				mask:    reg.Mask,
 				minimum: reg.SetMin,
 				maximum: reg.SetMax,
+				step:    reg.Step,
 				formula: reg.Formula,
 				format:  reg.FormatString,
 			}
