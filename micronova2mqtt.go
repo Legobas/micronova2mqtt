@@ -17,12 +17,11 @@ import (
 
 const (
 	appName  = "Micronova2MQTT"
-	powerKey = "Power"
 )
 
 var (
 	//Version import - build with -ldflags "-X main.Version=${VERSION}"
-	Version  string
+	Version  string = "dev"
 	dataMgr  *files.DataManager
 	mqttConn *mqtt.MqttConnection
 )
@@ -52,23 +51,6 @@ func init() {
 	log.Info().Msgf("%s %s", appName, Version)
 }
 
-func receiveMqttMessage(key string, value string) {
-	if key == powerKey {
-		// Switch device on/off
-		micronova.SetPower(value)
-	} else {
-		micronova.SetParameterByTitle(key, value)
-	}
-	micronova.SetUpdateMqtt(true)
-	log.Debug().Msgf("MQTT message received: %s=%s", key, value)
-}
-
-func publishMqttMessage(category, key, value string) {
-	if mqttConn != nil {
-		mqttConn.Publish(category, key, value)
-	}
-}
-
 func main() {
 	// Initialize Config
 	var err error
@@ -85,7 +67,6 @@ func main() {
 	mqttProperties.Qos = byte(dataMgr.Config.Mqtt.Qos)
 	mqttProperties.Retain = dataMgr.Config.Mqtt.Retain
 	mqttProperties.BaseTopic = dataMgr.Config.Mqtt.BaseTopic
-	mqttProperties.Receiver = receiveMqttMessage
 	mqttConn, err = mqtt.NewMqttConnection(mqttProperties)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to initialize MQTT")
@@ -96,7 +77,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to get brand data")
 	}
 
-	micronova.Run(dataMgr, customerCode, apiDomain, publishMqttMessage)
+	micronova.Run(dataMgr, customerCode, apiDomain, mqttConn)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
