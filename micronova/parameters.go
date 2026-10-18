@@ -99,9 +99,9 @@ func publishParameters() {
 	log.Debug().Msgf("MQTT message: %s", jsonStr)
 
 	topicStart := dm.Config.Mqtt.BaseTopic + "/" + deviceName + "/"
-	publisher.Publish(topicStart+"parameters", jsonStr)
+	queue.Publish(topicStart+"parameters", jsonStr)
 	// Publish Power state
-	publisher.Publish(topicStart+"power", power)
+	queue.Publish(topicStart+"power", power)
 }
 
 func publishValues() {
@@ -124,10 +124,10 @@ func publishValues() {
 	log.Debug().Msgf("MQTT message: %s", jsonStr)
 
 	topicStart := dm.Config.Mqtt.BaseTopic + "/" + deviceName + "/"
-	publisher.Publish(topicStart+"values", jsonStr)
+	queue.Publish(topicStart+"values", jsonStr)
 }
 
-func createHAConfig(publisher Publisher) homeassistant.HADiscovery {
+func createHAConfig(publisher Queue) homeassistant.HADiscovery {
 
 	var discovery homeassistant.HADiscovery
 

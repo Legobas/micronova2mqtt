@@ -31,7 +31,7 @@ const (
 	statusManagedMask  = 65535
 	deviceOnline       = "Online"
 	deviceOffline      = "Offline"
-	powerCommand           = "power"
+	powerCommand       = "power"
 )
 
 type valueDescr struct {
@@ -55,7 +55,7 @@ type parameter struct {
 	text       string
 }
 
-type Publisher interface {
+type Queue interface {
 	Publish(topic, value string)
 	Subscribe(topic string, handler mqtt.SubscriberFunc)
 }
@@ -73,17 +73,17 @@ var deviceModel string
 var dm *files.DataManager
 var customerCode string
 var apiDomain string
-var publisher Publisher
+var queue Queue
 
 var powerOn = setPowerOn
 var powerOff = setPowerOff
 var actions ActionsHolder
 
-func Run(dataManager *files.DataManager, customercode string, apidomain string, publishfunc Publisher) {
+func Run(dataManager *files.DataManager, customercode string, apidomain string, queuefunc Queue) {
 	dm = dataManager
 	customerCode = customercode
 	apiDomain = apidomain
-	publisher = publishfunc
+	queue = queuefunc
 
 	if dm.Config.Micronova.Power.On != "" {
 		powerOn = dm.Config.Micronova.Power.On
@@ -157,11 +157,11 @@ func Run(dataManager *files.DataManager, customercode string, apidomain string, 
 				deviceRegisters()
 
 				topic := dm.Config.Mqtt.BaseTopic + "/" + deviceName + "/command/+"
-				publisher.Subscribe(topic, receiveCommand)
+				queue.Subscribe(topic, receiveCommand)
 
 				if dm.Config.HomeAssistant.Discovery {
 					// Register with Home Assistant Discovery
-					discoveryConfig := createHAConfig(publisher)
+					discoveryConfig := createHAConfig(queue)
 					discoveryConfig.Setup()
 				}
 			}
@@ -219,11 +219,11 @@ func SetPower(command string) {
 		writeDevice(statusManagedGet, statusManagedOn, statusManagedMask)
 		actions.reset()
 		log.Info().Msg("Power On")
-		publisher.Publish(topicStart+"power", setPowerOn)
+		queue.Publish(topicStart+"power", setPowerOn)
 	case powerOff:
 		writeDevice(statusManagedGet, statusManagedOff, statusManagedMask)
 		log.Info().Msg("Power Off")
-		publisher.Publish(topicStart+"power", setPowerOff)
+		queue.Publish(topicStart+"power", setPowerOff)
 	default:
 		log.Warn().Msgf("Invalid power value: %s", command)
 	}
@@ -269,4 +269,18 @@ func setParameter(param parameter, value int) {
 
 func SetUpdateMqtt(update bool) {
 	updateMqtt = update
+}
+
+func sanitizeDeviceName(s string) string {
+	b := make([]byte, 0, len(s))
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch {
+		case (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'):
+			b = append(b, c)
+		case c == ' ':
+			b = append(b, '_')
+		}
+	}
+	return string(b)
 }

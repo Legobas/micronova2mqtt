@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -117,15 +116,15 @@ func deviceInfo() {
 				state = stateOffline
 			}
 
-			deviceName = strings.ReplaceAll(device.Name, " ", "_")
+			deviceName = sanitizeDeviceName(device.Name)
 			deviceSerial = device.Serial
 			deviceModel = device.ProductName
 
 			topicStart := dm.Config.Mqtt.BaseTopic + "/" + deviceName + "/"
-			publisher.Publish(topicStart+"description", device.Description)
-			publisher.Publish(topicStart+"product", device.ProductName)
-			publisher.Publish(topicStart+"creationDate", fmt.Sprintf("%v", device.CreationDate))
-			publisher.Publish(topicStart+"online", fmt.Sprintf("%v", device.Online))
+			queue.Publish(topicStart+"description", device.Description)
+			queue.Publish(topicStart+"product", device.ProductName)
+			queue.Publish(topicStart+"creationDate", fmt.Sprintf("%v", device.CreationDate))
+			queue.Publish(topicStart+"online", fmt.Sprintf("%v", device.Online))
 
 			break
 		}
