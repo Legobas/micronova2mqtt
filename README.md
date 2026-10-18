@@ -245,8 +245,9 @@ micronova:
 3. Dashboard Control
 
 Once the container restarts, a new device will appear under your MQTT Integration in Home Assistant.
-• Climate/Thermostat: Can be built using standard Lovelace cards controlling the temp_air_set and temp_air_get entities.
-• Power Switch: Controls the stove using the values configured under `micronova: power:`.
+
+* Climate/Thermostat: Can be built using standard Lovelace cards controlling the temp_air_set and temp_air_get entities.
+* Power Switch: Controls the stove using the values configured under `micronova: power:`.
 
 ## Actions
 
