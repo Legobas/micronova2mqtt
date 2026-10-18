@@ -194,16 +194,58 @@ If the device is not active the period between read actions will be 90 minutes (
 After a MQTT command operation the parameters are updated immediately.
 * Using only necessary RegKeys can significantly reduce memory usage and MQTT/network traffic.
 
-## Home Assistant
+## Home Assistant Integration
 
-Micronova2MQTT can register the device as Home Assistant components by sending MQTT discovery messages.
+Micronova2MQTT supports MQTT Discovery, allowing Home Assistant to automatically detect and configure your pellet stove as a device with all its sensors and switches.
 
-Add this to the Config:
+1. Enable MQTT Discovery
 
-```yaml
+Add the homeassistant block to your micronova2mqtt.yml configuration file:
+
+```
+mqtt:
+  url: mqttbroker:1883
+  # ... other mqtt settings ...
+
 homeassistant:
   discovery: true
 ```
+
+2. Best Practices for Home Assistant
+
+To get the cleanest experience in your Home Assistant dashboard, implement these two optimizations in your configuration:
+• Minimize Entities: Use the reg_keys list to expose only the parameters you actually want to monitor or control. This prevents Home Assistant from being flooded with hundreds of unused entities.
+• Friendly Names: Use the title option to automatically rename obscure (often Italian) register names into clear, readable English or Dutch entities in Home Assistant.
+
+Optimized Configuration Example
+
+```
+homeassistant:
+  discovery: true
+
+micronova:
+  brand: your_brand
+  # ... credentials ...
+  
+  # Limit and rename entities sent to Home Assistant
+  reg_keys:
+    - key: status_get
+      title: Stove Status
+    - key: alarms_get
+      title: Alarm Code
+    - key: temp_air_get
+      title: Room Temperature
+    - key: temp_air_set
+      title: Target Temperature
+    - key: power_set
+      title: Heating Power Level
+```
+
+3. Dashboard Control
+
+Once the container restarts, a new device will appear under your MQTT Integration in Home Assistant.
+• Climate/Thermostat: Can be built using standard Lovelace cards controlling the temp_air_set and temp_air_get entities.
+• Power Switch: Controls the stove using the values configured under `micronova: power:`.
 
 ## Actions
 
