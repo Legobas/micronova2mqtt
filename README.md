@@ -214,8 +214,9 @@ homeassistant:
 2. Best Practices for Home Assistant
 
 To get the cleanest experience in your Home Assistant dashboard, implement these two optimizations in your configuration:
-• Minimize Entities: Use the reg_keys list to expose only the parameters you actually want to monitor or control. This prevents Home Assistant from being flooded with hundreds of unused entities.
-• Friendly Names: Use the title option to automatically rename obscure (often Italian) register names into clear, readable English or Dutch entities in Home Assistant.
+
+* Minimize Entities: Use the reg_keys list to expose only the parameters you actually want to monitor or control. This prevents Home Assistant from being flooded with hundreds of unused entities.
+* Friendly Names: Use the title option to automatically rename obscure (often Italian) register names into clear, readable English or Dutch entities in Home Assistant.
 
 Optimized Configuration Example
 
