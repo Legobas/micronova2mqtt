@@ -14,7 +14,7 @@ const (
 	HAOnline      = "online"
 )
 
-type Publisher interface {
+type Queue interface {
 	Publish(topic, value string)
 	Subscribe(topic string, handler mqtt.SubscriberFunc)
 }
@@ -52,7 +52,7 @@ type HAEntityConfig struct {
 type HADiscovery struct {
 	DeviceName string
 	Entities   []HAEntityConfig
-	Publisher  Publisher
+	Publisher  Queue
 }
 
 func (discovery HADiscovery) reset(topic string, payload string) {

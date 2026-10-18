@@ -146,7 +146,6 @@ func createHAConfig(publisher Queue) homeassistant.HADiscovery {
 		var entity homeassistant.HAEntityConfig
 
 		if par.regKey[len(par.regKey)-3:] == "set" {
-			entity.Component = "number"
 			if len(par.valueDescr) > 0 {
 				entity.Component = "select"
 				options := make([]string, 0, len(par.valueDescr)+1)
@@ -159,9 +158,12 @@ func createHAConfig(publisher Queue) homeassistant.HADiscovery {
 				}
 
 				entity.Options = options
+				entity.StateTopic = fmt.Sprintf("%s/%s/parameters", dm.Config.Mqtt.BaseTopic, deviceName)
+			} else {
+				entity.Component = "number"
+				entity.StateTopic = fmt.Sprintf("%s/%s/values", dm.Config.Mqtt.BaseTopic, deviceName)
 			}
 			entity.CommandTopic = fmt.Sprintf("%s/%s/command/%s", dm.Config.Mqtt.BaseTopic, deviceName, par.title)
-			entity.StateTopic = fmt.Sprintf("%s/%s/parameters", dm.Config.Mqtt.BaseTopic, deviceName)
 			entity.ValueTemplate = fmt.Sprintf("{{ value_json.%s}}", par.title)
 		} else {
 			entity.Component = "sensor"
