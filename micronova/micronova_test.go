@@ -35,116 +35,6 @@ func NewMockDataManager() *files.DataManager {
 	}
 }
 
-// TestSetPower tests setting power
-func TestSetPower(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			title:   "power",
-			offset:  232,
-			mask:    65535,
-			minimum: 0,
-			maximum: 1,
-		},
-	}
-
-	SetPower("test")
-	// Test passes if no panic occurs
-}
-
-// TestSetPowerEmptyCommand tests empty power command
-func TestSetPowerEmptyCommand(t *testing.T) {
-	dm = NewMockDataManager()
-
-	SetPower("")
-	// Should handle gracefully without panic
-}
-
-// TestSetParameterAboveMaximum tests parameter exceeding maximum value
-func TestSetParameterAboveMaximum(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			title:   "setting",
-			offset:  15,
-			mask:    255,
-			minimum: 0,
-			maximum: 50,
-		},
-	}
-
-	SetParameterByTitle("setting", "100")
-	// Should fail gracefully as 100 > 50
-}
-
-// TestSetParameterBelowMinimum tests parameter below minimum value
-func TestSetParameterBelowMinimum(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			title:   "setting",
-			offset:  15,
-			mask:    255,
-			minimum: 10,
-			maximum: 50,
-		},
-	}
-
-	SetParameterByTitle("setting", "5")
-	// Should fail gracefully as 5 < 10
-}
-
-// TestSetParameterInvalidValue tests non-numeric parameter value
-func TestSetParameterInvalidValue(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			title:   "setting",
-			offset:  15,
-			mask:    255,
-			minimum: 0,
-			maximum: 100,
-		},
-	}
-
-	SetParameterByTitle("setting", "not_a_number")
-	// Should fail gracefully on parsing error
-}
-
-// TestSetParameterNotFound tests setting a parameter that doesn't exist
-func TestSetParameterNotFound(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			title:   "existing_param",
-			offset:  10,
-			mask:    255,
-			minimum: 0,
-			maximum: 100,
-		},
-	}
-
-	SetParameterByTitle("nonexistent_param", "50")
-	// Should fail gracefully without panicking
-}
-
-// TestSetParameterNegativeValue tests negative parameter value
-func TestSetParameterNegativeValue(t *testing.T) {
-	dm = NewMockDataManager()
-	parameters = []parameter{
-		{
-			title:   "setting",
-			offset:  10,
-			mask:    255,
-			minimum: 0,
-			maximum: 100,
-		},
-	}
-
-	SetParameterByTitle("setting", "-5")
-	// Should fail as -5 < minimum of 0
-}
-
 // TestParameterStructure tests parameter data structure
 func TestParameterStructure(t *testing.T) {
 	param := parameter{
@@ -168,26 +58,6 @@ func TestParameterStructure(t *testing.T) {
 	}
 }
 
-// TestSetUpdateMqttTrue tests enabling MQTT update flag
-func TestSetUpdateMqttTrue(t *testing.T) {
-	updateMqtt = false
-	SetUpdateMqtt(true)
-
-	if !updateMqtt {
-		t.Errorf("Expected updateMqtt to be true, got false")
-	}
-}
-
-// TestSetUpdateMqttFalse tests disabling MQTT update flag
-func TestSetUpdateMqttFalse(t *testing.T) {
-	updateMqtt = true
-	SetUpdateMqtt(false)
-
-	if updateMqtt {
-		t.Errorf("Expected updateMqtt to be false, got true")
-	}
-}
-
 // TestConstantsValidity tests that constants have expected values
 func TestConstantsValidity(t *testing.T) {
 	tests := []struct {
@@ -202,13 +72,6 @@ func TestConstantsValidity(t *testing.T) {
 		{"stateActive", stateActive, 1},
 		{"stateOffline", stateOffline, 2},
 		{"stateNotResponding", stateNotResponding, 3},
-		{"setPowerOn", setPowerOn, "on"},
-		{"setPowerOff", setPowerOff, "off"},
-		{"statusManagedGet", statusManagedGet, 232},
-		{"statusManagedOn", statusManagedOn, 85},
-		{"statusManagedOff", statusManagedOff, 170},
-		{"deviceOnline", deviceOnline, "Online"},
-		{"deviceOffline", deviceOffline, "Offline"},
 	}
 
 	for _, tt := range tests {

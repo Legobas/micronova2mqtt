@@ -12,6 +12,11 @@ import (
 	"github.com/sandertv/go-formula/v2"
 )
 
+type param struct {
+	Display string  `json:"display"`
+	Value   float64 `json:"value"`
+}
+
 func getParameters() (items []int, masks []int) {
 	for _, par := range parameters {
 		items = append(items, par.offset)
@@ -76,55 +81,36 @@ func isActive() bool {
 }
 
 func publishParameters() {
-	var params map[string]string
-	params = make(map[string]string)
+	topicStart := dm.Config.Mqtt.BaseTopic + "/" + deviceName + "/"
 	power := "off"
 
 	for _, par := range parameters {
 		key := par.regKey
 		if par.regKey == "status_get" && par.value != 0 {
 			power = "on"
+			continue
 		}
 		if len(par.title) != 0 {
 			key = par.title
 		}
-		params[key] = par.text
-	}
-	jsonBytes, err := json.Marshal(params)
-	if err != nil {
-		log.Error().Err(err).Msg("Marshal Error")
-		return
-	}
-	jsonStr := string(jsonBytes)
-	log.Debug().Msgf("MQTT message: %s", jsonStr)
+		param := param{
+			Display: par.text,
+			Value:   par.realValue,
+		}
 
-	topicStart := dm.Config.Mqtt.BaseTopic + "/" + deviceName + "/"
-	queue.Publish(topicStart+"parameters", jsonStr)
+		// Marshal JSON
+		payload, err := json.Marshal(param)
+		if err != nil {
+			log.Error().Err(err).Msgf("Failed to marshal parameter %s", key)
+		}
+
+		log.Debug().Msgf("MQTT message: %s = %s", key, string(payload))
+
+		queue.Publish(topicStart+key, string(payload))
+	}
+
 	// Publish Power state
 	queue.Publish(topicStart+"power", power)
-}
-
-func publishValues() {
-	var values map[string]float64
-	values = make(map[string]float64)
-
-	for _, par := range parameters {
-		key := par.regKey
-		if len(par.title) != 0 {
-			key = par.title
-		}
-		values[key] = par.realValue
-	}
-	jsonBytes, err := json.Marshal(values)
-	if err != nil {
-		log.Error().Err(err).Msg("Marshal Error")
-		return
-	}
-	jsonStr := string(jsonBytes)
-	log.Debug().Msgf("MQTT message: %s", jsonStr)
-
-	topicStart := dm.Config.Mqtt.BaseTopic + "/" + deviceName + "/"
-	queue.Publish(topicStart+"values", jsonStr)
 }
 
 func createHAConfig(publisher Queue) homeassistant.HADiscovery {
@@ -246,4 +232,18 @@ func createHAConfig(publisher Queue) homeassistant.HADiscovery {
 	discovery.Entities = append(discovery.Entities, entity)
 
 	return discovery
+}
+
+func sanitizeDeviceName(s string) string {
+	b := make([]byte, 0, len(s))
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch {
+		case (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'):
+			b = append(b, c)
+		case c == ' ':
+			b = append(b, '_')
+		}
+	}
+	return string(b)
 }

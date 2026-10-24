@@ -152,6 +152,9 @@ These are all possible options for the `micronova2mqtt.yml` yaml configuration f
   - `reg_keys` — RegKeys to include, with optional customized titles
     - `key` — Parameter RegKey
     - `title` — Rename or translate the parameter’s JSON field name
+- `homeassistant`
+  - `discovery` — Enable Home Assistant MQTT Discovery
+
 
 ## Environment variables
 
