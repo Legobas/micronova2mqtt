@@ -49,6 +49,7 @@ Supported [brands](brands.yml):
 * Reduced RegKeys set - option to use only relevant Micronova RegKeys
 * RegKey translation - change sometimes strange Italian RegKey names to customized meaningful titles
 * Actions - Set specific values if a threshold is reached
+* Home Assistant Discovery support
 
 ### Performance & Session Management
 * Smart token handling with automatic storage and refresh
