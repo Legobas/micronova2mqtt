@@ -88,7 +88,6 @@ func publishParameters() {
 		key := par.regKey
 		if par.regKey == "status_get" && par.value != 0 {
 			power = "on"
-			continue
 		}
 		if len(par.title) != 0 {
 			key = par.title
@@ -143,14 +142,25 @@ func createHAConfig(publisher Queue) homeassistant.HADiscovery {
 					options = append(options, strconv.Itoa(i))
 				}
 
+				commandTemplate := "{% set indexes = {"
+				for i := 0; i < len(options); i++ {
+					commandTemplate += "'" + options[i] + "': " + strconv.Itoa(i)
+					if i < len(options)-1 {
+						commandTemplate += ","
+					}
+				}
+				commandTemplate += "} %}{{ indexes[value] }}"
+
 				entity.Options = options
-				entity.StateTopic = fmt.Sprintf("%s/%s/parameters", dm.Config.Mqtt.BaseTopic, deviceName)
+				entity.StateTopic = fmt.Sprintf("%s/%s/%s", dm.Config.Mqtt.BaseTopic, deviceName, par.title)
+				entity.CommandTemplate = commandTemplate
+				entity.ValueTemplate = "{{ value_json.display}}"
 			} else {
 				entity.Component = "number"
-				entity.StateTopic = fmt.Sprintf("%s/%s/values", dm.Config.Mqtt.BaseTopic, deviceName)
+				entity.StateTopic = fmt.Sprintf("%s/%s/%s", dm.Config.Mqtt.BaseTopic, deviceName, par.title)
+				entity.ValueTemplate = "{{ value_json.value}}"
 			}
 			entity.CommandTopic = fmt.Sprintf("%s/%s/command/%s", dm.Config.Mqtt.BaseTopic, deviceName, par.title)
-			entity.ValueTemplate = fmt.Sprintf("{{ value_json.%s}}", par.title)
 		} else {
 			entity.Component = "sensor"
 			if len(par.valueDescr) > 0 {
@@ -163,14 +173,15 @@ func createHAConfig(publisher Queue) homeassistant.HADiscovery {
 					options = append(options, strconv.Itoa(i))
 				}
 				entity.Options = options
-				entity.StateTopic = fmt.Sprintf("%s/%s/parameters", dm.Config.Mqtt.BaseTopic, deviceName)
+				entity.StateTopic = fmt.Sprintf("%s/%s/%s", dm.Config.Mqtt.BaseTopic, deviceName, par.title)
+				entity.ValueTemplate = "{{ value_json.display}}"
 			} else {
-				entity.StateTopic = fmt.Sprintf("%s/%s/values", dm.Config.Mqtt.BaseTopic, deviceName)
+				entity.StateTopic = fmt.Sprintf("%s/%s/%s", dm.Config.Mqtt.BaseTopic, deviceName, par.title)
 				if strings.Contains(strings.ToLower(par.regKey), "temp") {
 					entity.DeviceClass = "temperature"
 				}
+				entity.ValueTemplate = "{{ value_json.value}}"
 			}
-			entity.ValueTemplate = fmt.Sprintf("{{ value_json.%s}}", par.title)
 		}
 		entity.Name = par.title
 		entity.ObjectId = par.regKey

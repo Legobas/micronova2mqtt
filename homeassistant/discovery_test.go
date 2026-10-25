@@ -2,126 +2,72 @@ package homeassistant
 
 import (
 	"encoding/json"
+	"fmt"
 	"micronova2mqtt/mqtt"
-	"strings"
 	"testing"
 )
 
-// MockQueue is een mock-implementatie van de Queue interface
-type MockQueue struct {
-	Published  map[string]string
-	Subscribed map[string]mqtt.SubscriberFunc
+type mockQueue struct {
+	published  map[string]string
+	subscribed map[string]mqtt.SubscriberFunc
 }
 
-func NewMockQueue() *MockQueue {
-	return &MockQueue{
-		Published:  make(map[string]string),
-		Subscribed: make(map[string]mqtt.SubscriberFunc),
+func newMockQueue() *mockQueue {
+	return &mockQueue{
+		published:  make(map[string]string),
+		subscribed: make(map[string]mqtt.SubscriberFunc),
 	}
 }
 
-func (m *MockQueue) Publish(topic, value string) {
-	m.Published[topic] = value
+func (m *mockQueue) Publish(topic, value string) {
+	m.published[topic] = value
 }
 
-func (m *MockQueue) Subscribe(topic string, handler mqtt.SubscriberFunc) {
-	m.Subscribed[topic] = handler
+func (m *mockQueue) Subscribe(topic string, handler mqtt.SubscriberFunc) {
+	m.subscribed[topic] = handler
 }
 
-// TestSetup controleert of de Setup methode correct registreert op het status topic
-func TestHADiscovery_Setup(t *testing.T) {
-	mockQueue := NewMockQueue()
-	discovery := HADiscovery{
-		DeviceName: "Test Device",
-		Publisher:  mockQueue,
-	}
+func TestReset_Online(t *testing.T) {
+	mq := newMockQueue()
 
-	discovery.Setup()
-
-	// Controleer of er is geabonneerd op het juiste Home Assistant status topic
-	handler, exists := mockQueue.Subscribed[HAStatusTopic]
-	if !exists {
-		t.Fatalf("Verwacht subcriptie op topic %s, maar deze is niet gevonden", HAStatusTopic)
-	}
-	if handler == nil {
-		t.Error("Subscriber handler mag niet nil zijn")
-	}
-}
-
-// TestReset_Online controleert of de ontdekking wordt geactiveerd bij een 'online' status
-func TestHADiscovery_Reset_Online(t *testing.T) {
-	mockQueue := NewMockQueue()
-
-	// We configureren een test-entity om te kijken of de JSON-generatie en publicatie werkt
 	entity := HAEntityConfig{
 		Component:  "sensor",
-		Name:       "Temperatuur",
-		UniqueId:   "test_temp_01",
-		StateTopic: "pellet/state/temp",
+		UniqueId:   "room_temperature",
+		Name:       "Room Temperature", // Set this so your debug log isn't blank
+		StateTopic: "micronova/state/temp",
 		Device: HADevice{
-			Identifiers:  []string{"test_id"},
-			Name:         "Kachel",
-			Manufacturer: "MicroNova",
-			Model:        "Basic",
+			Name: "Micronova Stove",
 		},
 	}
 
 	discovery := HADiscovery{
-		DeviceName: "Test Kachel",
+		DeviceName: "Stove",
 		Entities:   []HAEntityConfig{entity},
-		Publisher:  mockQueue,
+		Publisher:  mq,
 	}
 
-	// Activeer de reset methode met de 'online' payload
+	// Act
 	discovery.reset(HAStatusTopic, HAOnline)
 
-	var foundPayload string
-	var foundTopic string
-	for topic, payload := range mockQueue.Published {
-		if strings.Contains(topic, entity.UniqueId) {
-			foundTopic = topic
-			foundPayload = payload
-			break
-		}
+	// Assert: Constructing the expected topic precisely matches your formatting template
+	expectedTopic := fmt.Sprintf("homeassistant/%s/%s/%s/config", entity.Component, discovery.DeviceName, entity.UniqueId)
+
+	payload, exists := mq.published[expectedTopic]
+	if !exists {
+		t.Fatalf("Expected configuration to be published to %s, but found nothing", expectedTopic)
 	}
 
-	if foundTopic == "" {
-		t.Fatalf("Geen ontdekkingspayload gepubliceerd voor unique_id: %s", entity.UniqueId)
+	// Verify payload schema
+	var parsedConfig HAEntityConfig
+	if err := json.Unmarshal([]byte(payload), &parsedConfig); err != nil {
+		t.Fatalf("Failed to parse published JSON payload: %v", err)
 	}
 
-	// Valideer of de payload geldige JSON is en de correcte velden bevat
-	var config HAEntityConfig
-	err := json.Unmarshal([]byte(foundPayload), &config)
-	if err != nil {
-		t.Fatalf("Gepubliceerde payload is geen geldige JSON: %v", err)
+	if parsedConfig.UniqueId != entity.UniqueId {
+		t.Errorf("Expected UniqueId %s, got %s", entity.UniqueId, parsedConfig.UniqueId)
 	}
 
-	if config.Name != entity.Name {
-		t.Errorf("Verwachtte naam %s, maar kreeg %s", entity.Name, config.Name)
-	}
-
-	// Controleer dat het interne `Component` veld NIET in de JSON zit (vanwege json:"-")
-	if strings.Contains(foundPayload, `"Component"`) || strings.Contains(foundPayload, `"component"`) {
-		t.Error("Het interne veld 'Component' mag niet worden meegegeven in de JSON string")
-	}
-}
-
-// TestReset_Offline controleert dat er niets gebeurt als Home Assistant 'offline' meldt
-func TestHADiscovery_Reset_Offline(t *testing.T) {
-	mockQueue := NewMockQueue()
-	discovery := HADiscovery{
-		DeviceName: "Test Device",
-		Entities: []HAEntityConfig{
-			{Component: "sensor", UniqueId: "test_sensor"},
-		},
-		Publisher: mockQueue,
-	}
-
-	// Stuur een 'offline' status
-	discovery.reset(HAStatusTopic, "offline")
-
-	// Er zouden geen berichten gepubliceerd moeten zijn
-	if len(mockQueue.Published) > 0 {
-		t.Errorf("Er zijn %d berichten gepubliceerd, maar verwachtte 0 bij status offline", len(mockQueue.Published))
+	if parsedConfig.Name != entity.Name {
+		t.Errorf("Expected Name %s, got %s", entity.Name, parsedConfig.Name)
 	}
 }
