@@ -12,6 +12,19 @@ import (
 	"github.com/sandertv/go-formula/v2"
 )
 
+const (
+	statusOff           = 0
+	statusIgnition      = 1
+	statusAwaitingFlame = 2
+	statusStarting      = 3
+	statusOn            = 4
+	statusCleaning      = 5
+	statusShutOff       = 6
+	statusStandBy       = 7
+	statusAlarm         = 8
+	statusMemAlarm      = 9
+)
+
 type param struct {
 	Display string  `json:"display"`
 	Value   float64 `json:"value"`
@@ -65,11 +78,11 @@ func getCalculated(value int, formulaStr string) float64 {
 func isActive() bool {
 	for _, par := range parameters {
 		if par.regKey == "status_get" {
-			switch par.text {
-			case "Off":
+			switch par.value {
+			case statusOff:
 				state = stateInactive
 				return false
-			case "":
+			case statusStandBy:
 				return false
 			default:
 				state = stateActive
@@ -86,8 +99,10 @@ func publishParameters() {
 
 	for _, par := range parameters {
 		key := par.regKey
-		if par.regKey == "status_get" && par.value != 0 {
-			power = "on"
+		if par.regKey == "status_get" {
+			if par.value > statusOff && par.value < statusShutOff {
+				power = "on"
+			}
 		}
 		if len(par.title) != 0 {
 			key = par.title

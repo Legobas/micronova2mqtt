@@ -32,13 +32,13 @@ func TestGetText_Formula_Int(t *testing.T) {
 
 func TestIsActive(t *testing.T) {
 	parameters = []parameter{
-		{regKey: "status_get", text: "Off"},
+		{regKey: "status_get", value: 0},
 	}
 	if isActive() {
-		t.Fatal("expected inactive when status_get == Off")
+		t.Fatal("expected inactive when status_get == 0")
 	}
-	parameters[0].text = "On"
+	parameters[0].value = 4
 	if !isActive() {
-		t.Fatal("expected active when status_get != Off")
+		t.Fatal("expected active when status_get != 0")
 	}
 }
