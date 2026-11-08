@@ -78,13 +78,10 @@ func getCalculated(value int, formulaStr string) float64 {
 func isActive() bool {
 	for _, par := range parameters {
 		if par.regKey == "status_get" {
-			switch par.value {
-			case statusOff:
+			if par.value == statusOff {
 				state = stateInactive
 				return false
-			case statusStandBy:
-				return false
-			default:
+			} else {
 				state = stateActive
 				return true
 			}
@@ -100,7 +97,7 @@ func publishParameters() {
 	for _, par := range parameters {
 		key := par.regKey
 		if par.regKey == "status_get" {
-			if par.value > statusOff && par.value < statusShutOff {
+			if par.value > statusOff {
 				power = "on"
 			}
 		}
