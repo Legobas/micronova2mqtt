@@ -1,7 +1,7 @@
 # Micronova2MQTT
 
 [![CI](https://github.com/Legobas/micronova2mqtt/actions/workflows/ci.yml/badge.svg)](https://github.com/Legobas/micronova2mqtt/actions/workflows/ci.yml)
-![Docker Pulls](https://badgen.net/docker/pulls/legobas/micronova2mqtt?icon=docker&label=pulls)](https://hub.docker.com/r/legobas/micronova2mqtt)
+[![Docker Pulls](https://badgen.net/docker/pulls/legobas/micronova2mqtt?icon=docker&label=pulls)](https://hub.docker.com/r/legobas/micronova2mqtt)
 [![Docker Image Size](https://badgen.net/docker/size/legobas/micronova2mqtt?icon=docker&label=image%20size)](https://hub.docker.com/r/legobas/micronova2mqtt)
 
 Micronova2MQTT is a bridge between Micronova Agua IOT pellet-stove controllers and MQTT-based home-automation systems.
