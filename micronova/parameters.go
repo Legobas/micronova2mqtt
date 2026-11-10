@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/expr-lang/expr"
 	"github.com/rs/zerolog/log"
-	"github.com/sandertv/go-formula/v2"
 )
 
 const (
@@ -60,19 +60,31 @@ func getText(value int, formulaStr string, format string, valueDescr []valueDesc
 }
 
 func getCalculated(value int, formulaStr string) float64 {
-	calc := strings.Replace(formulaStr, "#", "x", -1)
+	calc := strings.ReplaceAll(formulaStr, "#", "x")
 
-	f, err := formula.New(calc)
+	program, err := expr.Compile(calc,
+		expr.Env(map[string]any{"x": float64(0)}),
+		expr.AsFloat64(),
+		expr.Function(
+			"int",
+			func(params ...any) (any, error) {
+				return math.Round(params[0].(float64)), nil
+			},
+			new(func(float64) float64),
+		),
+	)
 	if err != nil {
 		log.Error().Err(err).Msgf("Formula calculation error: %s", calc)
 		return -1
 	}
-	f.RegisterFunc("int", 1, func(args ...float64) float64 {
-		return math.Round(args[0])
-	})
 
-	val := formula.Var("x", value)
-	return f.MustEval(val)
+	out, err := expr.Run(program, map[string]any{"x": float64(value)})
+	if err != nil {
+		log.Error().Err(err).Msgf("Formula evaluation error: %s", calc)
+		return -1
+	}
+
+	return out.(float64)
 }
 
 func isActive() bool {
@@ -97,7 +109,14 @@ func publishParameters() {
 	for _, par := range parameters {
 		key := par.regKey
 		if par.regKey == "status_get" {
-			if par.value > statusOff {
+			switch par.value {
+			case statusIgnition, statusAwaitingFlame:
+				power = "on"
+			case statusStarting, statusOn:
+				power = "on"
+			case statusCleaning, statusStandBy:
+				power = "on"
+			case statusAlarm, statusMemAlarm:
 				power = "on"
 			}
 		}
