@@ -1,5 +1,7 @@
 # Micronova2MQTT
 
+[![Go test](https://github.com/Legobas/micronova2mqtt/actions/workflows/ci.yml/badge.svg?job=test)](https://github.com/Legobas/micronova2mqtt/actions/workflows/ci.yml)
+[![Go vet](https://github.com/Legobas/micronova2mqtt/actions/workflows/ci.yml/badge.svg?job=vet)](https://github.com/Legobas/micronova2mqtt/actions/workflows/ci.yml)
 [![Docker Pulls](https://badgen.net/docker/pulls/legobas/micronova2mqtt?icon=docker&label=pulls)](https://hub.docker.com/r/legobas/micronova2mqtt)
 [![Docker Image Size](https://badgen.net/docker/size/legobas/micronova2mqtt?icon=docker&label=image%20size)](https://hub.docker.com/r/legobas/micronova2mqtt)
 
