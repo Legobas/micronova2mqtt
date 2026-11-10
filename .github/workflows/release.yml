@@ -31,14 +31,20 @@ jobs:
  
       - uses: actions/setup-go@v5
         with:
-          go-version: '>=1.20'
+          go-version-file: go.mod
   
+      - name: Download dependencies
+        run: go mod download
+
       - name: Build
         run: go build -ldflags "-X main.Version=${{ steps.next_version.outputs.version }}"
   
       - name: Test
         run: go test -v ./...
 
+      - name: Run go vet
+        run: go vet ./...
+        
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
