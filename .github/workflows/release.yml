@@ -57,6 +57,7 @@ jobs:
           context: .
           build-args: |
             VERSION=${{ steps.next_version.outputs.version }}
+
           push: true
-          platforms: linux/amd64, linux/arm64/v8, linux/arm/v7
+          patforms: linux/amd64, linux/arm64/v8, linux/arm/v7
           tags: legobas/micronova2mqtt:latest,legobas/micronova2mqtt:${{ steps.next_version.outputs.version }}
