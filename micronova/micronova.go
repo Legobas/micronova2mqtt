@@ -131,7 +131,7 @@ func Run(dataManager *files.DataManager, customercode string, apidomain string, 
 			deviceList()
 		}
 
-		// Check if device is online/offline
+		// Get Device Info and Check if device is online/offline
 		if (state != stateActive && state != stateInactive) || deviceName == "" {
 			deviceInfo()
 		}
@@ -163,10 +163,10 @@ func Run(dataManager *files.DataManager, customercode string, apidomain string, 
 			if state == stateActive {
 				actions.Process(dm.Config.Micronova.Actions)
 			}
-		}
 
-		// Publish the device parameters and values on MQTT Topic
-		publishParameters()
+			// Publish the device parameters and values on MQTT Topic
+			publishParameters()
+		}
 
 		// Wait short time (30 sec) if device active or amount of cycles if inactive
 		for range maxInactiveCycles {

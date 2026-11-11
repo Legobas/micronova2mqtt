@@ -144,26 +144,6 @@ func TestSetParameterNegativeValue(t *testing.T) {
 	// Should fail as -5 < minimum of 0
 }
 
-// TestSetUpdateMqttTrue tests enabling MQTT update flag
-func TestSetUpdateMqttTrue(t *testing.T) {
-	updateMqtt = false
-	SetUpdateMqtt(true)
-
-	if !updateMqtt {
-		t.Errorf("Expected updateMqtt to be true, got false")
-	}
-}
-
-// TestSetUpdateMqttFalse tests disabling MQTT update flag
-func TestSetUpdateMqttFalse(t *testing.T) {
-	updateMqtt = true
-	SetUpdateMqtt(false)
-
-	if updateMqtt {
-		t.Errorf("Expected updateMqtt to be false, got true")
-	}
-}
-
 // Test that constants have expected values
 func TestCommandsConstantsValidity(t *testing.T) {
 	tests := []struct {

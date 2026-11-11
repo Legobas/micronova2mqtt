@@ -35,7 +35,7 @@ func receiveCommand(topic string, value string) {
 	} else {
 		SetParameterByTitle(command, value)
 	}
-	SetUpdateMqtt(true)
+	updateMqtt = true
 }
 
 func SetPower(command string) {
@@ -92,8 +92,4 @@ func setParameter(param parameter, value int) {
 
 	// Send the device parameter to Micronova
 	writeDevice(param.offset, value, param.mask)
-}
-
-func SetUpdateMqtt(update bool) {
-	updateMqtt = update
 }

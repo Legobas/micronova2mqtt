@@ -88,14 +88,16 @@ func getCalculated(value int, formulaStr string) float64 {
 }
 
 func isActive() bool {
-	for _, par := range parameters {
-		if par.regKey == "status_get" {
-			if par.value == statusOff {
-				state = stateInactive
-				return false
-			} else {
-				state = stateActive
-				return true
+	if state != stateOffline {
+		for _, par := range parameters {
+			if par.regKey == "status_get" {
+				if par.value == statusOff {
+					state = stateInactive
+					return false
+				} else {
+					state = stateActive
+					return true
+				}
 			}
 		}
 	}
@@ -116,26 +118,25 @@ func publishParameters() {
 				power = "on"
 			case statusCleaning, statusStandBy:
 				power = "on"
-			case statusAlarm, statusMemAlarm:
-				power = "on"
 			}
 		}
 		if len(par.title) != 0 {
 			key = par.title
 		}
-		param := param{
+
+		// Publish parameter to MQTT
+		jsonParam := param{
 			Display: par.text,
 			Value:   par.realValue,
 		}
 
 		// Marshal JSON
-		payload, err := json.Marshal(param)
+		payload, err := json.Marshal(jsonParam)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to marshal parameter %s", key)
 		}
 
 		log.Debug().Msgf("MQTT message: %s = %s", key, string(payload))
-
 		queue.Publish(topicStart+key, string(payload))
 	}
 

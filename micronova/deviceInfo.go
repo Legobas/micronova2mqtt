@@ -110,6 +110,7 @@ func deviceInfo() {
 	for _, device := range result.Device {
 		if device.ProductId == dm.Session.ProductId && device.DeviceId == dm.Session.DeviceId {
 			if device.Online {
+				log.Info().Msgf("Device '%s' is online", device.Name)
 				state = stateInactive
 			} else {
 				log.Warn().Msgf("Device '%s' is offline", device.Name)
