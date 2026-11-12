@@ -1,6 +1,9 @@
 package mqtt
 
 import (
+	"fmt"
+	"strings"
+	"sync"
 	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
@@ -8,11 +11,12 @@ import (
 )
 
 const (
-	connectionTimeout = time.Second * 10
-	qosAtMostOnce     = byte(0)
-	qosAtLeastOnce    = byte(1)
-	qosExactlyOnce    = byte(2)
-	retainMessage     = true
+	connectionTimeout    = time.Second * 10
+	maxReconnectInterval = time.Second * 30
+	QosAtMostOnce        = byte(0)
+	QosAtLeastOnce       = byte(1)
+	QosExactlyOnce       = byte(2)
+	retainMessage        = true
 )
 
 type SubscriberFunc func(topic string, payload string)
@@ -28,81 +32,136 @@ type MqttProperties struct {
 }
 
 type MqttConnection struct {
-	mqttClient  MQTT.Client
-	qos         byte
-	retain      bool
-	baseTopic   string
-	statusTopic string
-	configPath  string
+	mqttClient    MQTT.Client
+	qos           byte
+	retain        bool
+	baseTopic     string
+	statusTopic   string
+	subscriptions map[string]SubscriberFunc
+	mu            sync.RWMutex
 }
 
-func NewMqttConnection(properties MqttProperties) (*MqttConnection, error) {
-	mc := &MqttConnection{}
-	mc.qos = properties.Qos
-	mc.retain = properties.Retain
-	mc.baseTopic = properties.BaseTopic
-	mc.statusTopic = mc.baseTopic + "/status"
+func NewMqttConnection(props MqttProperties) (*MqttConnection, error) {
+	base := strings.TrimRight(props.BaseTopic, "/")
+	if strings.TrimSpace(base) == "" {
+		return nil, fmt.Errorf("MQTT BaseTopic must not be empty")
+	}
+	if props.Qos > QosExactlyOnce {
+		return nil, fmt.Errorf("invalid QoS (%d), must be 0, 1 or 2", props.Qos)
+	}
+
+	mc := &MqttConnection{
+		qos:           props.Qos,
+		retain:        props.Retain,
+		baseTopic:     base,
+		statusTopic:   base + "/status",
+		subscriptions: make(map[string]SubscriberFunc),
+	}
 
 	opts := MQTT.NewClientOptions().
-		AddBroker(properties.Url).
-		SetClientID(properties.ClientId).
+		AddBroker(props.Url).
+		SetClientID(props.ClientId).
 		SetCleanSession(true).
-		SetBinaryWill(mc.statusTopic, []byte("Offline"), qosAtMostOnce, retainMessage).
+		SetOrderMatters(false).
+		SetConnectTimeout(connectionTimeout).
+		SetBinaryWill(mc.statusTopic, []byte("Offline"), QosAtLeastOnce, retainMessage).
 		SetAutoReconnect(true).
+		SetMaxReconnectInterval(maxReconnectInterval).
 		SetConnectionLostHandler(func(c MQTT.Client, err error) {
 			mc.handleConnectionLost(err)
-		}).SetOnConnectHandler(func(c MQTT.Client) {
-		mc.handleConnect(c)
-	})
-	if properties.User != "" && properties.Password != "" {
-		opts.SetUsername(properties.User)
-		opts.SetPassword(properties.Password)
+		}).
+		SetOnConnectHandler(func(c MQTT.Client) {
+			go mc.handleConnect(c)
+		})
+
+	if props.User != "" {
+		opts.SetUsername(props.User)
+		if props.Password != "" {
+			opts.SetPassword(props.Password)
+		}
 	}
 
 	mc.mqttClient = MQTT.NewClient(opts)
-	token := mc.mqttClient.Connect()
-	if !token.WaitTimeout(connectionTimeout) || token.Error() != nil {
-		log.Fatal().Err(token.Error()).Msg("MQTT connection failed")
+	if err := waitToken(mc.mqttClient.Connect()); err != nil {
+		mc.mqttClient.Disconnect(0)
+		return nil, fmt.Errorf("MQTT connection failed: %w", err)
 	}
-
-	token = mc.mqttClient.Publish(mc.statusTopic, qosExactlyOnce, retainMessage, "Online")
-	if !token.WaitTimeout(connectionTimeout) || token.Error() != nil {
-		log.Error().Err(token.Error()).Msg("Failed to publish LWT status")
-	}
-
 	return mc, nil
 }
 
-func (mc MqttConnection) handleConnectionLost(err error) {
+func (mc *MqttConnection) handleConnectionLost(err error) {
 	log.Error().Err(err).Msg("MQTT connection lost, attempting reconnect")
 }
 
-func (mc MqttConnection) handleConnect(c MQTT.Client) {
+func (mc *MqttConnection) handleConnect(c MQTT.Client) {
 	log.Info().Msg("MQTT client connected")
+
+	token := c.Publish(mc.statusTopic, QosAtLeastOnce, retainMessage, "Online")
+	if err := waitToken(token); err != nil {
+		log.Error().Err(err).Msg("failed to publish LWT online status")
+	}
+
+	mc.mu.RLock()
+	subs := make(map[string]SubscriberFunc, len(mc.subscriptions))
+	for topic, handler := range mc.subscriptions {
+		subs[topic] = handler
+	}
+	mc.mu.RUnlock()
+
+	for topic, handler := range subs {
+		mc.subscribeTopic(c, topic, handler)
+	}
 }
 
-func (mc MqttConnection) Publish(topic string, value string) {
+func (mc *MqttConnection) Publish(topic string, value string) {
 	token := mc.mqttClient.Publish(topic, mc.qos, mc.retain, value)
-	if !token.WaitTimeout(connectionTimeout) || token.Error() != nil {
-		log.Error().Err(token.Error()).Msgf("Failed to publish raw to %s", topic)
+	if err := waitToken(token); err != nil {
+		log.Error().Err(err).Msgf("failed to publish to %s", topic)
 	}
 }
 
 func (mc *MqttConnection) Subscribe(topic string, handler SubscriberFunc) {
 	if handler == nil {
-		log.Warn().Str("topic", topic).Msg("Subscription error: no handler provided")
+		log.Warn().Str("topic", topic).Msg("subscription error: no handler provided")
 		return
 	}
 
-	log.Info().Str("topic", topic).Msg("Subscribing to")
+	// Save subscription so it can be restored after a reconnect
+	mc.mu.Lock()
+	mc.subscriptions[topic] = handler
+	mc.mu.Unlock()
+
+	if mc.mqttClient.IsConnected() {
+		mc.subscribeTopic(mc.mqttClient, topic, handler)
+	}
+}
+
+func (mc *MqttConnection) subscribeTopic(client MQTT.Client, topic string, handler SubscriberFunc) {
+	log.Info().Str("topic", topic).Msg("subscribing to topic")
 
 	mqttCallback := func(client MQTT.Client, message MQTT.Message) {
 		handler(message.Topic(), string(message.Payload()))
 	}
 
-	token := mc.mqttClient.Subscribe(topic, qosExactlyOnce, mqttCallback)
-
-	if !token.WaitTimeout(connectionTimeout) || token.Error() != nil {
-		log.Error().Err(token.Error()).Str("topic", topic).Msg("Subscription failed")
+	token := client.Subscribe(topic, mc.qos, mqttCallback)
+	if err := waitToken(token); err != nil {
+		log.Error().Err(err).Msgf("subscribe to %s failed", topic)
 	}
+}
+
+func (mc *MqttConnection) Close() {
+	if mc.mqttClient.IsConnected() {
+		token := mc.mqttClient.Publish(mc.statusTopic, QosAtLeastOnce, retainMessage, "Offline")
+		if err := waitToken(token); err != nil {
+			log.Error().Err(err).Msg("failed to publish offline status")
+		}
+	}
+	mc.mqttClient.Disconnect(250)
+}
+
+func waitToken(token MQTT.Token) error {
+	if !token.WaitTimeout(connectionTimeout) {
+		return fmt.Errorf("timed out after %s", connectionTimeout)
+	}
+	return token.Error()
 }

@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	setPowerOn         = "on"
-	setPowerOff        = "off"
-	statusManagedGet   = 232
-	statusManagedOn    = 85
-	statusManagedOff   = 170
-	statusManagedMask  = 65535
-	powerCommand       = "power"
+	setPowerOn        = "on"
+	setPowerOff       = "off"
+	statusManagedGet  = 232
+	statusManagedOn   = 85
+	statusManagedOff  = 170
+	statusManagedMask = 65535
+	powerCommand      = "power"
 )
 
 func receiveCommand(topic string, value string) {
@@ -57,6 +57,7 @@ func SetPower(command string) {
 }
 
 func SetParameterByTitle(title string, val string) {
+	found := false
 	for _, param := range parameters {
 		if title == param.title {
 			value, err := strconv.Atoi(val)
@@ -65,17 +66,26 @@ func SetParameterByTitle(title string, val string) {
 				return
 			}
 			setParameter(param, value)
+			found = true
 			break
 		}
+	}
+	if !found {
+		log.Warn().Msgf("Parameter '%s' not found", title)
 	}
 }
 
 func SetParameterByRegKey(key string, value int) {
+	found := false
 	for _, par := range parameters {
 		if par.regKey == key {
 			setParameter(par, value)
+			found = true
 			break
 		}
+	}
+	if !found {
+		log.Warn().Msgf("Parameter with key '%s' not found", key)
 	}
 }
 

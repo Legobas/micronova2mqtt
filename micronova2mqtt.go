@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -16,7 +17,7 @@ import (
 )
 
 const (
-	appName  = "Micronova2MQTT"
+	appName = "Micronova2MQTT"
 )
 
 var (
@@ -77,10 +78,11 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to get brand data")
 	}
 
-	micronova.Run(dataMgr, customerCode, apiDomain, mqttConn)
+	go micronova.Run(dataMgr, customerCode, apiDomain, mqttConn)
 
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	<-sigChan
+	mqttConn.Close()
 	log.Info().Msgf("%s stopped", strings.ToUpper(appName))
 }
