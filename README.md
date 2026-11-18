@@ -56,6 +56,7 @@ Supported [brands](brands.yml):
 * Smart token handling with automatic storage and refresh
 * Persistent storage of Product ID and Device ID minimizes API calls across sessions
 * Minimal API usage — calls are limited to once per 90 minutes during device inactivity
+* Built-in Docker Healthcheck for automated container status monitoring
 
 ### Security
 * Encrypted session data protecting sensitive tokens

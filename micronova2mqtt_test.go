@@ -1,7 +1,14 @@
 package main
 
 import (
+	"context"
+	"errors"
+	"io"
+	"net/http"
+	"os"
+	"os/exec"
 	"testing"
+	"time"
 )
 
 // Mock interfaces for dependencies
@@ -77,18 +84,92 @@ func TestVersion_Variable(t *testing.T) {
 		t.Errorf("Version = %q, want %q", Version, "1.2.3")
 	}
 }
+func TestStartHealthServer(t *testing.T) {
+	srv := startHealthServer("127.0.0.1:8080")
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(ctx)
+	}()
 
-// Example of how to test receiveMqttMessage with dependency injection
-// This shows the recommended approach for testable code
+	// Give the goroutine a brief moment to bind to 127.0.0.1:8080
+	var resp *http.Response
+	var err error
+	for i := 0; i < 10; i++ {
+		resp, err = http.Get("http://127.0.0.1:8080/health")
+		if err == nil {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if err != nil {
+		t.Fatalf("Failed to connect to health server: %v", err)
+	}
+	defer resp.Body.Close()
 
-// ReceiveMqttMessageWithDeps is a refactored version that accepts dependencies
-// This allows for better testing and is recommended for your actual implementation
-type MessageReceiver struct {
-	micronovaAdapter MicronovaAdapter
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status 200 OK, got %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("Failed to read response body: %v", err)
+	}
+	if string(body) != "OK" {
+		t.Errorf("Expected body 'OK', got %q", string(body))
+	}
 }
 
-type MicronovaAdapter interface {
-	SetPower(value string)
-	SetParameter(key, value string)
-	SetUpdateMqtt(value bool)
+func TestCheckHealth_FlagFalse(t *testing.T) {
+	flagVal := false
+	// Should return immediately without calling os.Exit
+	checkHealth(&flagVal)
+}
+
+func TestCheckHealth_Success(t *testing.T) {
+	if os.Getenv("BE_CRASHER") == "1" {
+		flagVal := true
+		checkHealth(&flagVal)
+		return
+	}
+
+	// Start the server in the main test process so the child process can query it
+	srv := startHealthServer("127.0.0.1:8080")
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(ctx)
+	}()
+	time.Sleep(50 * time.Millisecond)
+
+	// Run the test in a subprocess because checkHealth calls os.Exit(0)
+	cmd := exec.Command(os.Args[0], "-test.run=TestCheckHealth_Success")
+	cmd.Env = append(os.Environ(), "BE_CRASHER=1")
+	err := cmd.Run()
+
+	if err != nil {
+		t.Fatalf("Expected checkHealth to exit with status 0, got error: %v", err)
+	}
+}
+
+func TestCheckHealth_Failure(t *testing.T) {
+	if os.Getenv("BE_CRASHER") == "1" {
+		flagVal := true
+		checkHealth(&flagVal)
+		return
+	}
+
+	// Ensure no server is running on 127.0.0.1:8080, then run in subprocess
+	cmd := exec.Command(os.Args[0], "-test.run=TestCheckHealth_Failure")
+	cmd.Env = append(os.Environ(), "BE_CRASHER=1")
+	err := cmd.Run()
+
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		if exitErr.ExitCode() != 1 {
+			t.Errorf("Expected exit code 1, got %d", exitErr.ExitCode())
+		}
+		return
+	}
+	t.Fatalf("Expected checkHealth to fail with exit code 1, but got err: %v", err)
 }

@@ -7,7 +7,7 @@ COPY ./go.* ./
 RUN --mount=type=cache,target=/gomod-cache \
   go mod download
 COPY . ./
-ARG VERSION=v0.0.1
+ARG VERSION=v1.0.0
 RUN --mount=type=cache,target=/gomod-cache --mount=type=cache,target=/go-cache \
   go build -ldflags "-X main.Version=${VERSION}" -o app .
 
@@ -24,5 +24,6 @@ COPY --from=builder /workspace/brands.yml /bin
 
 USER ${PUID}:${PGID}
 WORKDIR /bin
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD ["/bin/app", "-healthcheck"]
 CMD ["/bin/app"]
 VOLUME /data

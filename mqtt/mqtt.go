@@ -109,7 +109,7 @@ func (mc *MqttConnection) handleConnect(c MQTT.Client) {
 	mc.mu.RUnlock()
 
 	for topic, handler := range subs {
-		mc.subscribeTopic(c, topic, handler)
+		mc.subscribeToTopic(c, topic, handler)
 	}
 }
 
@@ -132,11 +132,11 @@ func (mc *MqttConnection) Subscribe(topic string, handler SubscriberFunc) {
 	mc.mu.Unlock()
 
 	if mc.mqttClient.IsConnected() {
-		mc.subscribeTopic(mc.mqttClient, topic, handler)
+		mc.subscribeToTopic(mc.mqttClient, topic, handler)
 	}
 }
 
-func (mc *MqttConnection) subscribeTopic(client MQTT.Client, topic string, handler SubscriberFunc) {
+func (mc *MqttConnection) subscribeToTopic(client MQTT.Client, topic string, handler SubscriberFunc) {
 	log.Info().Str("topic", topic).Msg("subscribing to topic")
 
 	mqttCallback := func(client MQTT.Client, message MQTT.Message) {
@@ -147,6 +147,10 @@ func (mc *MqttConnection) subscribeTopic(client MQTT.Client, topic string, handl
 	if err := waitToken(token); err != nil {
 		log.Error().Err(err).Msgf("subscribe to %s failed", topic)
 	}
+}
+
+func (mc *MqttConnection) IsConnected() bool {
+	return mc.mqttClient != nil && mc.mqttClient.IsConnected()
 }
 
 func (mc *MqttConnection) Close() {

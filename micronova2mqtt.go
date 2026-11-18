@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	_ "embed"
+	"flag"
 	"fmt"
 	"micronova2mqtt/files"
 	"micronova2mqtt/micronova"
 	"micronova2mqtt/mqtt"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -45,14 +48,63 @@ func init() {
 		log.Logger = log.With().Caller().Logger()
 		log.Logger = log.Level(zerolog.TraceLevel)
 	default:
-		log.Logger = log.Level(zerolog.InfoLevel)
+		log.Logger = log.Level(zerolog.TraceLevel)
+		// log.Logger = log.Level(zerolog.InfoLevel)
+	}
+}
+
+func startHealthServer(addr string) *http.Server {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: mux,
 	}
 
-	// Print Application with version
-	log.Info().Msgf("%s %s", appName, Version)
+	go func() {
+		log.Info().Msgf("Health server started on %s", srv.Addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal().Err(err).Msg("Health server failed")
+			os.Exit(1)
+		}
+	}()
+
+	return srv
+}
+
+func shutdownHealthServer(srv *http.Server) {
+	fmt.Println("Server wordt afgesloten...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		fmt.Printf("Fout bij afsluiten: %v\n", err)
+	}
+}
+
+func checkHealth(healthCheckParam *bool) {
+	if *healthCheckParam {
+		client := &http.Client{Timeout: 3 * time.Second}
+		resp, err := client.Get("http://127.0.0.1:8080/health")
+		if err != nil || resp.StatusCode != http.StatusOK {
+			log.Error().Msgf("Healthcheck: %s did not respond", appName)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
 }
 
 func main() {
+	param := flag.Bool("healthcheck", false, "Run Docker healthcheck")
+	flag.Parse()
+	checkHealth(param)
+
+	log.Info().Msgf("%s %s", appName, Version)
+
 	// Initialize Config
 	var err error
 	dataMgr, err = files.NewData()
@@ -80,9 +132,13 @@ func main() {
 
 	go micronova.Run(dataMgr, customerCode, apiDomain, mqttConn)
 
+	srv := startHealthServer("127.0.0.1:8080")
+
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
 	<-sigChan
+	shutdownHealthServer(srv)
 	mqttConn.Close()
 	log.Info().Msgf("%s stopped", strings.ToUpper(appName))
 }
