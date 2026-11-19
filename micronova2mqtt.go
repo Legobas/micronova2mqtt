@@ -48,8 +48,7 @@ func init() {
 		log.Logger = log.With().Caller().Logger()
 		log.Logger = log.Level(zerolog.TraceLevel)
 	default:
-		log.Logger = log.Level(zerolog.TraceLevel)
-		// log.Logger = log.Level(zerolog.InfoLevel)
+		log.Logger = log.Level(zerolog.InfoLevel)
 	}
 }
 
