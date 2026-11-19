@@ -76,12 +76,11 @@ func startHealthServer(addr string) *http.Server {
 }
 
 func shutdownHealthServer(srv *http.Server) {
-	fmt.Println("Server wordt afgesloten...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		fmt.Printf("Fout bij afsluiten: %v\n", err)
+		log.Error().Err(err).Msg("error shutting down health server")
 	}
 }
 
