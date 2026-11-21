@@ -2,14 +2,14 @@ package micronova
 
 import (
 	"fmt"
-	"micronova2mqtt/files"
+	"micronova2mqtt/appdata"
 	"slices"
 
 	"github.com/rs/zerolog/log"
 )
 
 type ActionsHolder struct {
-	actions              []files.Action
+	actions              []appdata.Action
 	activated            []string
 	getCalculated        func(value int, formulaStr string) float64
 	setParameterByRegKey func(key string, value int)
@@ -20,7 +20,7 @@ func (holder *ActionsHolder) reset() {
 	holder.activated = []string{}
 }
 
-func (holder *ActionsHolder) Process(actions []files.Action) {
+func (holder *ActionsHolder) Process(actions []appdata.Action) {
 	holder.actions = actions
 
 	for _, action := range actions {

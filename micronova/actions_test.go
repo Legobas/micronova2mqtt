@@ -1,7 +1,7 @@
 package micronova
 
 import (
-	"micronova2mqtt/files"
+	"micronova2mqtt/appdata"
 	"testing"
 )
 
@@ -36,14 +36,14 @@ func TestActionsHolder_Process_ActivatesAction(t *testing.T) {
 		},
 	}
 
-	actions := []files.Action{
+	actions := []appdata.Action{
 		{
-			Trigger: files.ActionTrigger{
+			Trigger: appdata.ActionTrigger{
 				GetKey:       "room_temp",
 				MinimumValue: 20.0,
 				MaximumValue: 25.0,
 			},
-			SetValues: []files.ActionSetValues{
+			SetValues: []appdata.ActionSetValues{
 				{SetKey: "stove_power", Value: 3},
 			},
 		},
@@ -81,14 +81,14 @@ func TestActionsHolder_Process_SkipsOutOfRange(t *testing.T) {
 		},
 	}
 
-	actions := []files.Action{
+	actions := []appdata.Action{
 		{
-			Trigger: files.ActionTrigger{
+			Trigger: appdata.ActionTrigger{
 				GetKey:       "room_temp",
 				MinimumValue: 20.0,
 				MaximumValue: 25.0,
 			},
-			SetValues: []files.ActionSetValues{
+			SetValues: []appdata.ActionSetValues{
 				{SetKey: "stove_power", Value: 3},
 			},
 		},
@@ -127,14 +127,14 @@ func TestActionsHolder_Process_AlreadyActivated(t *testing.T) {
 		},
 	}
 
-	actions := []files.Action{
+	actions := []appdata.Action{
 		{
-			Trigger: files.ActionTrigger{
+			Trigger: appdata.ActionTrigger{
 				GetKey:       "room_temp",
 				MinimumValue: 20.0,
 				MaximumValue: 25.0,
 			},
-			SetValues: []files.ActionSetValues{
+			SetValues: []appdata.ActionSetValues{
 				{SetKey: "stove_power", Value: 3},
 			},
 		},

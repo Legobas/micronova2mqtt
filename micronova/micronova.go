@@ -1,7 +1,7 @@
 package micronova
 
 import (
-	"micronova2mqtt/files"
+	"micronova2mqtt/appdata"
 	"micronova2mqtt/mqtt"
 	"strconv"
 	"time"
@@ -60,7 +60,7 @@ var deviceName string
 var deviceSerial string
 var deviceModel string
 
-var dm *files.DataManager
+var dm *appdata.DataManager
 var customerCode string
 var apiDomain string
 var queue Queue
@@ -69,7 +69,42 @@ var powerOn = setPowerOn
 var powerOff = setPowerOff
 var actions ActionsHolder
 
-func Run(dataManager *files.DataManager, customercode string, apidomain string, queuefunc Queue) {
+func checkSession() error {
+	// Signup - Register app UUID
+	if dm.Session.UUID == "" {
+		signup()
+	}
+
+	tokenExp, err := getJwtExpiration(dm.Session.Token)
+	if err != nil {
+		tokenExp = time.Now().Add(-24 * time.Hour) // set token to yesterday (expired)
+	}
+	log.Debug().Msgf("Token Expiration: %s", tokenExp)
+
+	refreshTokenExp, err := getJwtExpiration(dm.Session.RefreshToken)
+	if err != nil {
+		refreshTokenExp = time.Now().Add(-24 * time.Hour) // set token to yesterday (expired)
+	}
+	log.Debug().Msgf("RefreshToken Expiration: %s", refreshTokenExp)
+
+	// Login if RefreshToken expired (or empty)
+	if refreshTokenExp.Before(time.Now()) {
+		login()
+	}
+
+	// Update Token if JWT expired
+	if tokenExp.Before(time.Now()) {
+		err = updateToken()
+		if err != nil {
+			log.Error().Err(err).Msg("JWT Token Error - Tokens cleared")
+			return err
+		}
+	}
+
+	return nil
+}
+
+func Run(dataManager *appdata.DataManager, customercode string, apidomain string, queuefunc Queue) {
 	dm = dataManager
 	customerCode = customercode
 	apiDomain = apidomain
@@ -95,35 +130,8 @@ func Run(dataManager *files.DataManager, customercode string, apidomain string, 
 	}
 
 	for {
-		// Signup - Register app UUID
-		if dm.Session.UUID == "" {
-			signup()
-		}
-
-		tokenExp, err := getJwtExpiration(dm.Session.Token)
-		if err != nil {
-			tokenExp = time.Now().Add(-24 * time.Hour) // set token to yesterday (expired)
-		}
-		log.Debug().Msgf("Token Expiration: %s", tokenExp)
-
-		refreshTokenExp, err := getJwtExpiration(dm.Session.RefreshToken)
-		if err != nil {
-			refreshTokenExp = time.Now().Add(-24 * time.Hour) // set token to yesterday (expired)
-		}
-		log.Debug().Msgf("RefreshToken Expiration: %s", refreshTokenExp)
-
-		// Login if RefreshToken expired (or empty)
-		if refreshTokenExp.Before(time.Now()) {
-			login()
-		}
-
-		// Update Token if JWT expired
-		if tokenExp.Before(time.Now()) {
-			err = updateToken()
-			if err != nil {
-				log.Error().Err(err).Msg("JWT Token Error - Tokens cleared")
-				continue
-			}
+		if err:=checkSession(); err!=nil {
+			continue
 		}
 
 		// Get ProductId and DeviceId (of first Device)

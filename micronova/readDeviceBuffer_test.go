@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"micronova2mqtt/files"
+	"micronova2mqtt/appdata"
 	"net/http"
 	"testing"
 )
@@ -13,7 +13,7 @@ func initReadDeviceBufferTest() {
 	apiDomain = "micronova.com"
 	customerCode = "777777"
 
-	dm = &files.DataManager{}
+	dm = &appdata.DataManager{}
 
 	dm.Session.Token = "76132ea1-1932-3bdc-769e-af904a8dd5fc"
 	dm.Session.ProductId = "9999"

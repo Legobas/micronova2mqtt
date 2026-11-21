@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"micronova2mqtt/files"
+	"micronova2mqtt/appdata"
 	"net/http"
 	"testing"
 )
@@ -18,7 +18,7 @@ func initLoginTest() {
 	apiDomain = "micronova.com"
 	customerCode = "123456"
 
-	dm = &files.DataManager{}
+	dm = &appdata.DataManager{}
 
 	dm.Config.Micronova.Email = email
 	dm.Config.Micronova.Password = password
@@ -27,7 +27,7 @@ func initLoginTest() {
 // TestBuildLoginRequest verifies the request method, URL, headers and JSON body.
 func TestBuildLoginRequest(t *testing.T) {
 	initLoginTest()
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 

@@ -29,6 +29,9 @@ func receiveCommand(topic string, value string) {
 
 	log.Debug().Msgf("Command: %s=%s", command, value)
 
+	// Update expired JWT before calling API
+	checkSession()
+
 	if command == powerCommand {
 		// Switch device on/off
 		SetPower(value)

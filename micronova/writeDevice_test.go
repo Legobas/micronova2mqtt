@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"micronova2mqtt/files"
+	"micronova2mqtt/appdata"
 	"net/http"
 	"testing"
 )
@@ -19,7 +19,7 @@ func initWriteDeviceTest() {
 	apiDomain = "micronova.com"
 	customerCode = "824583"
 
-	dm = &files.DataManager{}
+	dm = &appdata.DataManager{}
 	dm.Session.Token = "89262ea0-2934-4bdc-769e-af904a8dd5fc"
 	dm.Session.ProductId = "1078"
 	dm.Session.DeviceId = "67762"

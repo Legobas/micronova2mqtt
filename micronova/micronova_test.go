@@ -1,35 +1,35 @@
 package micronova
 
 import (
-	"micronova2mqtt/files"
+	"micronova2mqtt/appdata"
 	"testing"
 	"time"
 )
 
 // MockDataManager creates a mock DataManager for testing
-func NewMockDataManager() *files.DataManager {
-	pc := files.Power{
+func NewMockDataManager() *appdata.DataManager {
+	pc := appdata.Power{
 		On:  "on",
 		Off: "off",
 	}
-	rk := files.RegKey{
+	rk := appdata.RegKey{
 		Key:   "Key",
 		Title: "Topic",
 	}
-	mn := files.Micronova{
+	mn := appdata.Micronova{
 		Power:   pc,
-		RegKeys: []files.RegKey{rk},
+		RegKeys: []appdata.RegKey{rk},
 	}
 
-	return &files.DataManager{
-		Session: files.Session{
+	return &appdata.DataManager{
+		Session: appdata.Session{
 			UUID:         "test-uuid",
 			Token:        "test-token",
 			RefreshToken: "test-refresh-token",
 			ProductId:    "test-product-id",
 			DeviceId:     "test-device-id",
 		},
-		Config: files.Config{
+		Config: appdata.Config{
 			Micronova: mn,
 		},
 	}

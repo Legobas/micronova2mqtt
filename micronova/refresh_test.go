@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"micronova2mqtt/files"
+	"micronova2mqtt/appdata"
 	"net/http"
 	"testing"
 )
@@ -13,7 +13,7 @@ func initRefreshTest() {
 	apiDomain = "micronova.com"
 	customerCode = "888888"
 
-	dm = &files.DataManager{}
+	dm = &appdata.DataManager{}
 	dm.Session.RefreshToken = "12345ab-1234-56dc-7890-abcdef00"
 }
 

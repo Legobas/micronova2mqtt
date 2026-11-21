@@ -1,4 +1,4 @@
-package files
+package appdata
 
 import (
 	"crypto/aes"

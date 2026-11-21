@@ -5,7 +5,7 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
-	"micronova2mqtt/files"
+	"micronova2mqtt/appdata"
 	"micronova2mqtt/micronova"
 	"micronova2mqtt/mqtt"
 	"net/http"
@@ -26,7 +26,7 @@ const (
 var (
 	//Version import - build with -ldflags "-X main.Version=${VERSION}"
 	Version  string = "dev"
-	dataMgr  *files.DataManager
+	dataMgr  *appdata.DataManager
 	mqttConn *mqtt.MqttConnection
 )
 
@@ -76,6 +76,7 @@ func startHealthServer(addr string) *http.Server {
 }
 
 func shutdownHealthServer(srv *http.Server) {
+	log.Info().Msg("Shutting down health server...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -105,7 +106,7 @@ func main() {
 
 	// Initialize Config
 	var err error
-	dataMgr, err = files.NewData()
+	dataMgr, err = appdata.NewDataManager()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to initialize config")
 	}
