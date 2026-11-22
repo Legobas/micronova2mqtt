@@ -179,18 +179,18 @@ LOGLEVEL = error
 - `status_managed_off_enable`: Bitmask indicating from which current stove statuses an **OFF** command is allowed (e.g., allowed when `4 = On` or `1 = Ignition`, blocked when already `0 = Off`).
   > **Note:** Depending on the stove brand and controller firmware, some Micronova boards invert the naming or behavior of `_on_enable` and `_off_enable` (or treat them as command masks). If a bitmask appears reversed on your stove, check the live values reported during `Off` (`0`) vs. `On` (`4`).
 - `status_get`: Current operating phase of the stove:
-	- 0 = Off: The stove is completely off or idle without heat demand.
-	- 1 = Ignition: Startup phase. The glow plug (igniter) heats up and the first pellets are fed into the burn pot.
-	- 2 = Awaiting flame: The stove waits for the flue gas temperature to rise, confirming that the pellets have ignited.
-	- 3 = Starting: Flame detected. The stove stabilizes combustion and ramps up temperature in a controlled manner.
-	- 4 = On: Normal operating phase (Work / Lavoro). The stove burns steadily at the set power level or modulates based on room temperature.
-	- 5 = Cleaning: Intermediate burn-pot cleaning cycle. The exhaust fan temporarily runs at maximum speed to blow ash out of the burn pot.
-	- 6 = Shut Off: Shutdown / cooling phase (Final Cleaning). The fan runs at high speed to safely cool down the stove and evacuate remaining flue gases.
-	- 7 = Stand-by: The stove has reached the target room temperature and temporarily extinguished. It will automatically reignite once the temperature drops below the threshold.
-	- 8 = Alarm: An active fault has occurred (e.g., out of pellets, fan failure, or overheating), shutting the stove down for safety.
-	- 9 = Mem Alarm: Alarm memory. A fault occurred previously; the stove has cooled down, but the error remains stored in memory and must be manually cleared before restarting.
+	- `0 = Off`: The stove is completely off or idle without heat demand.
+	- `1 = Ignition`: Startup phase. The glow plug (igniter) heats up and the first pellets are fed into the burn pot.
+	- `2 = Awaiting flame`: The stove waits for the flue gas temperature to rise, confirming that the pellets have ignited.
+	- `3 = Starting`: Flame detected. The stove stabilizes combustion and ramps up temperature in a controlled manner.
+	- `4 = On`: Normal operating phase (Work / Lavoro). The stove burns steadily at the set power level or modulates based on room temperature.
+	- `5 = Cleaning`: Intermediate burn-pot cleaning cycle. The exhaust fan temporarily runs at maximum speed to blow ash out of the burn pot.
+	- `6 = Shut Off`: Shutdown / cooling phase (Final Cleaning). The fan runs at high speed to safely cool down the stove and evacuate remaining flue gases.
+	- `7 = Stand-by`: The stove has reached the target room temperature and temporarily extinguished. It will automatically reignite once the temperature drops below the threshold.
+	- `8 = Alarm`: An active fault has occurred (e.g., out of pellets, fan failure, or overheating), shutting the stove down for safety.
+	- `9 = Mem Alarm`: Alarm memory. A fault occurred previously; the stove has cooled down, but the error remains stored in memory and must be manually cleared before restarting.
 - `standby_get`: Read current Sleep timer setting (144 = Off, 0 = 00:00, steps of 10 minutes: 1 to 143 = 00:10 to 23:50).
-- `standby_set`: Set Sleep timer (e.g., micronova2mqtt/<device>/command/standby_set = 144 to disable Sleep).
+- `standby_set`: Set Sleep timer (e.g., `micronova2mqtt/<device>/command/standby_set = 144` to disable Sleep).
 - `eco_stop_set`: Auto-Eco / Eco-Stop mode (0 = Off, 1 = On).
 - `eco_temp_stop`: Eco-Stop delay time before shutting down once target temperature is exceeded (max. 30 minutes).
 - `hw_power_code_get`: Fixed hardware identification code of the main control board (power board).
