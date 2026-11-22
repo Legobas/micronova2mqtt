@@ -171,6 +171,8 @@ LOGLEVEL = error
 
 ## Micronova parameter description
 
+> **Note:** The parameters below are common across Micronova-based pellet stoves, but exact names, ranges, and behavior can vary depending on your stove's brand, model, and firmware. Enable `log_reg_keys: true` in your configuration to see the exact registers supported by your stove.
+
 1. Status & Diagnostics
 
 - `alarms_get`: Active alarm/error code (0 = OK).
