@@ -169,6 +169,69 @@ LOGLEVEL = debug
 LOGLEVEL = error
 ```
 
+## Micronova parameter description
+
+1. Status & Diagnostics
+
+- alarms_get: Active alarm/error code (0 = OK).
+- status_managed_get: Managed stove state value reported by the controller (e.g., 32). (Note: In Micronova command topics, 85 is typically used to switch ON and 170 to switch OFF).
+- status_managed_on_enable: Bitmask indicating from which current stove statuses an ON command is allowed (e.g., allowed from 0 = Off or 7 = Stand-by, blocked during 5 = Cleaning or 8 = Alarm).
+- status_managed_off_enable: Bitmask indicating from which current stove statuses an OFF command is allowed (e.g., allowed when 4 = On or 1 = Ignition, blocked when already 0 = Off).
+- status_get: Current operating phase of the stove:
+	- 0 = Off: The stove is completely off or idle without heat demand.
+	- 1 = Ignition: Startup phase. The glow plug (igniter) heats up and the first pellets are fed into the burn pot.
+	- 2 = Awaiting flame: The stove waits for the flue gas temperature to rise, confirming that the pellets have ignited.
+	- 3 = Starting: Flame detected. The stove stabilizes combustion and ramps up temperature in a controlled manner.
+	- 4 = On: Normal operating phase (Work / Lavoro). The stove burns steadily at the set power level or modulates based on room temperature.
+	- 5 = Cleaning: Intermediate burn-pot cleaning cycle. The exhaust fan temporarily runs at maximum speed to blow ash out of the burn pot.
+	- 6 = Shut Off: Shutdown / cooling phase (Final Cleaning). The fan runs at high speed to safely cool down the stove and evacuate remaining flue gases.
+	- 7 = Stand-by: The stove has reached the target room temperature and temporarily extinguished. It will automatically reignite once the temperature drops below the threshold.
+	- 8 = Alarm: An active fault has occurred (e.g., out of pellets, fan failure, or overheating), shutting the stove down for safety.
+	- 9 = Mem Alarm: Alarm memory. A fault occurred previously; the stove has cooled down, but the error remains stored in memory and must be manually cleared before restarting.
+- standby_get: Read current Sleep timer setting (144 = Off, 0 = 00:00, steps of 10 minutes: 1 to 143 = 00:10 to 23:50).
+- standby_set: Set Sleep timer (e.g., micronova2mqtt/PelletKachel/command/standby_set = 144 to disable Sleep).
+- eco_stop_set: Auto-Eco / Eco-Stop mode (0 = Off, 1 = On).
+- eco_temp_stop: Eco-Stop delay time before shutting down once target temperature is exceeded (max. 30 minutes).
+- hw_power_code_get: Fixed hardware identification code of the main control board (power board).
+- hw_power_fw_type_get: Fixed firmware type identification code of the main control board.
+- ore_lavoro_par_get: Partial operating hours (since the last service/maintenance reset).
+- ore_lavoro_tot_get: Total operating hours since factory new (a service reminder is typically triggered at 1,000 or 2,000 hours).
+- giri_estrattore_get: Actual rotational speed (RPM) of the flue gas exhaust fan (extractor).
+- tim_coc_get: Auger (pellet feed screw) runtime in seconds per feed cycle.
+
+2. Power & Temperature
+
+- power_set: User-selected flame power level (1 to 5).
+- real_power_get: Actual current flame power level at which the stove is burning (if set to 5 but the room nears the target temperature, the stove modulates down to 1 — showing the difference between requested and actual output).
+- temp_air_get: Measured room temperature from the ambient sensor at the rear of the stove (°C).
+- temp_air_set: Target room temperature (thermostat setpoint in °C).
+- temp_board_get: Internal temperature of the main electronic control board (°C) (monitored for electronics overheating, typically triggering around 65–70°C).
+- temp_gas_flue_get: Flue gas temperature measured in the exhaust path (°C) (used to confirm flame presence and transition from Ignition to On).
+- therm_ext_get: Status of the external room thermostat input on the control board (0 = open contact / no thermostat or no heat demand, 1 = closed contact).
+
+3. Ventilation
+
+- vent_main_set: Set main room fan speed (0 = Auto / Comfort Mode, 1 to 5 = manual speed levels, 5 = Max).
+- canalization_1_set: Set ducted (canalization) fan speed (0 = Auto / Comfort Mode, 1 to 5 = manual speed levels, 5 = Max).
+- vent_front_get: Actual voltage supplied to the main front room fan (V).
+- vent_front2_get: Actual voltage supplied to the second (ducted/canalization) fan (V).
+
+4. Time & Date
+
+- clock_hour_set & clock_minute_set: Hours and minutes of the internal stove clock (stored as standard decimal integers).
+- calendar_day_set: Day of the month stored as BCD (Binary-Coded Decimal) read as decimal (e.g., decimal 34 = hex 0x22 → day 22).
+- calendar_day_week_set: Day of the week (1 = Monday through 7 = Sunday).
+- calendar_month_set: Month stored as BCD read as decimal (e.g., decimal 17 = hex 0x11 → month 11 / November).
+- calendar_year_set: Year stored as 2000 + BCD read as decimal (e.g., 2038 → 38 = hex 0x26 → 2026).
+
+5. Chrono (chrono_p1_* through chrono_p6_*)
+
+The stove supports 6 independent weekly schedule programs (p1 to p6), each sharing the same 10 parameters:
+- chrono_pX_enable_set: Enables (1) or disables (0) program X.
+- chrono_pX_start_set: Start time of program X (in 10- or 15-minute increments from 00:00, similar to standby_set).
+- chrono_pX_stop_set: Stop time of program X.
+- chrono_pX_day_monday_set through sunday_set: Enables (1) or disables (0) program X for each individual day of the week.
+
 ## Security
 
 ### On/Off values.
@@ -378,22 +441,51 @@ micronova:
         - set_key: canalization_1_set
           value: 1
   reg_keys:
+    # Status & Diagnostics
     - key: status_get
-      title: Status
+      title: Stove Status
     - key: alarms_get
-      title: Alarm
+      title: Alarm Code
+    - key: eco_stop_set
+      title: Eco Stop
+    - key: eco_temp_stop
+      title: Eco Stop Delay
+    - key: standby_set
+      title: Sleep Timer
+    - key: ore_lavoro_par_get
+      title: Partial Operating Hours
+    - key: ore_lavoro_tot_get
+      title: Total Operating Hours
+    - key: giri_estrattore_get
+      title: Exhaust Fan RPM
+    - key: tim_coc_get
+      title: Auger Feed Time
+
+    # Power & Temperature
     - key: power_set
-      title: SetPower
-    - key: temp_air_set
-      title: Thermostat
+      title: Target Power Level
+    - key: real_power_get
+      title: Actual Power Level
     - key: temp_air_get
-      title: TempRoom
+      title: Room Temperature
+    - key: temp_air_set
+      title: Target Temperature
     - key: temp_gas_flue_get
-      title: TempFlueGas
+      title: Flue Gas Temperature
+    - key: temp_board_get
+      title: Board Temperature
+    - key: therm_ext_get
+      title: External Thermostat
+
+    # Ventilation
     - key: vent_main_set
-      title: SetVentilationSpeed
+      title: Main Fan Speed
+    - key: canalization_1_set
+      title: Canalization Fan Speed
     - key: vent_front_get
-      title: Ventilation
+      title: Main Fan Voltage
+    - key: vent_front2_get
+      title: Canalization Fan Voltage
 ```
 
 ## Building and running
