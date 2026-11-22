@@ -176,7 +176,8 @@ LOGLEVEL = error
 1. Status & Diagnostics
 
 - `alarms_get`: Active alarm/error code (0 = OK).
-- `status_managed_get`: Managed stove state value reported by the controller (e.g., 32). (Note: In Micronova command topics, 85 is typically used to switch ON and 170 to switch OFF).
+- `status_managed_get`: Managed stove state value reported by the controller (e.g., 32).
+  > **Note:** In Micronova command topics, 85 is typically used to switch **ON** and 170 to switch **OFF**.
 - `status_managed_on_enable`: Bitmask indicating from which current stove statuses an **ON** command is allowed (e.g., allowed from `0 = Off` or `7 = Stand-by`, blocked during `5 = Cleaning` or `8 = Alarm`).
 - `status_managed_off_enable`: Bitmask indicating from which current stove statuses an **OFF** command is allowed (e.g., allowed when `4 = On` or `1 = Ignition`, blocked when already `0 = Off`).
   > **Note:** Depending on the stove brand and controller firmware, some Micronova boards invert the naming or behavior of `_on_enable` and `_off_enable` (or treat them as command masks). If a bitmask appears reversed on your stove, check the live values reported during `Off` (`0`) vs. `On` (`4`).
@@ -193,7 +194,7 @@ LOGLEVEL = error
 	- `9 = Mem Alarm`: Alarm memory. A fault occurred previously; the stove has cooled down, but the error remains stored in memory and must be manually cleared before restarting.
 - `standby_get`: Read current Sleep timer setting (144 = Off, 0 = 00:00, steps of 10 minutes: 1 to 143 = 00:10 to 23:50).
 - `standby_set`: Set Sleep timer (e.g., `micronova2mqtt/<device>/command/standby_set = 144` to disable Sleep).
-- `eco_stop_set`: Auto-Eco / Eco-Stop mode (0 = Off, 1 = On).
+- `eco_stop_set`: Auto-Eco / Eco-Stop mode (`0 = Off`, `1 = On`).
 - `eco_temp_stop`: Eco-Stop delay time before shutting down once target temperature is exceeded (max. 30 minutes).
 - `hw_power_code_get`: Fixed hardware identification code of the main control board (power board).
 - `hw_power_fw_type_get`: Fixed firmware type identification code of the main control board.
