@@ -189,7 +189,7 @@ LOGLEVEL = error
 	- 8 = Alarm: An active fault has occurred (e.g., out of pellets, fan failure, or overheating), shutting the stove down for safety.
 	- 9 = Mem Alarm: Alarm memory. A fault occurred previously; the stove has cooled down, but the error remains stored in memory and must be manually cleared before restarting.
 - standby_get: Read current Sleep timer setting (144 = Off, 0 = 00:00, steps of 10 minutes: 1 to 143 = 00:10 to 23:50).
-- standby_set: Set Sleep timer (e.g., micronova2mqtt/PelletKachel/command/standby_set = 144 to disable Sleep).
+- standby_set: Set Sleep timer (e.g., micronova2mqtt/<device>/command/standby_set = 144 to disable Sleep).
 - eco_stop_set: Auto-Eco / Eco-Stop mode (0 = Off, 1 = On).
 - eco_temp_stop: Eco-Stop delay time before shutting down once target temperature is exceeded (max. 30 minutes).
 - hw_power_code_get: Fixed hardware identification code of the main control board (power board).
@@ -494,7 +494,7 @@ Build with:
 
     go build -ldflags "-X main.Version=1.0.0"
 
-The `micronova2mqtt.yml` file has to exist in one of the following locations:
+The `micronova2mqtt.yml` file must exist in one of the following locations:
 
  * A `data` directory in the filesystem root: `/data/micronova2mqtt.yml` (used for the docker image)
  * A `.data` directory in the user home directory `~/.data/micronova2mqtt.yml`
