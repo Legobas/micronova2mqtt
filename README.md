@@ -171,7 +171,8 @@ LOGLEVEL = error
 
 ## Micronova parameter description
 
-> **Note:** The parameters below are common across Micronova-based pellet stoves, but exact names, ranges, and behavior can vary depending on your stove's brand, model, and firmware. Enable `log_reg_keys: true` in your configuration to see the exact registers supported by your stove.
+The parameters below are common across Micronova-based pellet stoves, but exact names, ranges, and behavior can vary depending on your stove's brand, model, and firmware.
+Enable `log_reg_keys: true` in your configuration to see the exact registers supported by your stove.
 
 1. Status & Diagnostics
 
@@ -248,10 +249,12 @@ Switching the pellet stove On or Off can be done by sending the MQTT messages:
 
 To make these values less obvious they can be obfuscated by setting the config settings:
 
+```yml
     micronova:
       power:
         on:  secret1
         off: secret2
+```
 
 These on/off values can be used by sending the MQTT messages:
 
@@ -278,7 +281,7 @@ Micronova2MQTT supports MQTT Discovery, allowing Home Assistant to automatically
 
 Add the homeassistant block to your micronova2mqtt.yml configuration file:
 
-```
+```yml
 mqtt:
   url: mqttbroker:1883
   # ... other mqtt settings ...
@@ -296,7 +299,7 @@ To get the cleanest experience in your Home Assistant dashboard, implement these
 
 Optimized Configuration Example
 
-```
+```yml
 homeassistant:
   discovery: true
 
