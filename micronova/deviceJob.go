@@ -1,37 +1,46 @@
 package micronova
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
 )
 
 const (
-	deviceJobPath = "deviceJobStatus/"
-	// retryDeviceJob = 30
-	retryDeviceJob = 3
+	deviceJobPath  = "deviceJobStatus/"
+	retryDeviceJob = 30
 )
 
-type data struct {
+type jobAnswerData struct {
 	Items  []int  `json:"Items"`
 	Values []int  `json:"Values"`
 	Cmd    string `json:"cmd"`
 }
 
 type deviceJobResp struct {
-	Success          bool   `json:"Success"`
-	Error            string `json:"Error"`
-	Text             string `json:"Text"`
-	JobRequestStatus string `json:"jobRequestStatus"`
-	JobAnswerStatus  string `json:"jobAnswerStatus"`
-	JobAnswerData    data   `json:"jobAnswerData"`
+	Success          bool           `json:"Success"`
+	Error            string         `json:"Error"`
+	Text             string         `json:"Text"`
+	JobRequestStatus string         `json:"jobRequestStatus"`
+	JobAnswerStatus  string         `json:"jobAnswerStatus"`
+	JobAnswerData    *jobAnswerData `json:"jobAnswerData,omitempty"`
+}
+
+// handle empty jobAnswerData returned as an empty string by the API
+func (d *jobAnswerData) UnmarshalJSON(data []byte) error {
+	if bytes.Equal(data, []byte(`""`)) {
+		return nil
+	}
+
+	type Alias jobAnswerData
+	return json.Unmarshal(data, (*Alias)(d))
 }
 
 func getJobResult(requestId string) error {
@@ -51,7 +60,7 @@ func deviceJob(requestId string) bool {
 
 	req := buildDeviceJobRequest(ctx, requestId)
 	if req == nil {
-		log.Fatal().Msg("Failed to build DeviceJob request")
+		log.Error().Msg("Failed to build DeviceJob request")
 	}
 
 	log.Debug().Msgf("API Call: %s%s", deviceJobPath, requestId)
@@ -59,32 +68,37 @@ func deviceJob(requestId string) bool {
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Fatal().Err(err).Msg("DeviceJob HTTP Client error")
+		log.Error().Err(err).Msg("DeviceJob HTTP Client error")
 		return false
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Error reading response body")
+		log.Error().Err(err).Msg("Error reading response body")
 	}
 
 	log.Trace().Msgf("DeviceJob Response:\n%s", string(body[:]))
 
-	// status 'waiting' or 'terminated' results in unmarshal error
-	if !strings.Contains(string(body), "\"jobAnswerStatus\":\"completed\"") {
+	var result deviceJobResp
+	if err := json.Unmarshal(body, &result); err != nil {
+		log.Error().Err(err).Msg("Error unmarshaling DeviceJob response")
 		return false
 	}
 
-	var result deviceJobResp
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Error unmarshaling response data")
+	// keep trying if status is 'waiting' or 'terminated'
+	if result.JobAnswerStatus != "completed" {
+		return false
+	}
+
+	// keep trying if jobAnswerData is empty
+	if result.JobAnswerData == nil {
+		return false
 	}
 
 	// Validate HTTP status code and response Success field
 	if resp.StatusCode != http.StatusOK || !result.Success {
-		log.Fatal().Msgf("DeviceJob Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		log.Error().Msgf("DeviceJob Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
 	}
 
 	if result.JobAnswerData.Cmd == "GetBufferReading" {

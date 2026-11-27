@@ -67,7 +67,7 @@ func startHealthServer(addr string) *http.Server {
 	go func() {
 		log.Info().Msgf("Health server started on %s", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal().Err(err).Msg("Health server failed")
+			log.Error().Err(err).Msg("Health server failed")
 			os.Exit(1)
 		}
 	}()

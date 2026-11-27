@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -32,14 +33,16 @@ type readDeviceResp struct {
 	Error     string `json:"Error"`
 }
 
-func readDevice() {
+func readDevice() error {
 	// Create context for timeout
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
 	req := buildReadDeviceRequest(ctx)
 	if req == nil {
-		log.Fatal().Msg("Failed to build ReadDevice request")
+		err := fmt.Errorf("Failed to build ReadDevice request")
+		log.Error().Err(err)
+		return err
 	}
 
 	log.Debug().Msgf("API Call: %s -->", readDevicePath)
@@ -47,37 +50,42 @@ func readDevice() {
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Fatal().Err(err).Msg("ReadDevice HTTP Client error")
-		return
+		log.Error().Err(err).Msg("ReadDevice HTTP Client error")
+		return err
 	}
 	defer resp.Body.Close()
 
 	var result readDeviceResp
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Error decoding response")
+		log.Error().Err(err).Msg("Error decoding response")
+		return err
 	}
 
 	log.Trace().Msgf("ReadDevice Response:\n%+v", result)
 
 	// Validate HTTP status code and response Success field
 	if resp.StatusCode != http.StatusOK || !result.Success {
-		log.Fatal().Msgf("ReadDevice Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		err := fmt.Errorf("ReadDevice Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		log.Error().Err(err)
+		return err
 	}
 
 	if result.RequestId == "" {
-		log.Fatal().Msg("readDevice: No Request ID")
+		log.Error().Err(err).Msg("readDevice: No Request ID")
 	}
 
 	if err := getJobResult(result.RequestId); err != nil {
 		state = stateNotResponding
 		log.Error().Err(err).Msg("Device is not responding")
-		return
+		return err
 	}
 
 	for _, par := range parameters {
 		log.Trace().Msgf("Parameter %s=%v", par.regKey, par.text)
 	}
+
+	return nil
 }
 
 func buildReadDeviceRequest(ctx context.Context) *http.Request {

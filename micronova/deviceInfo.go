@@ -67,14 +67,16 @@ type deviceInfoResp struct {
 	Error      string           `json:"Error"`
 }
 
-func deviceInfo() {
+func deviceInfo() error {
 	// Create context for timeout
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
 	req := buildDeviceInfoRequest(ctx)
 	if req == nil {
-		log.Fatal().Msg("Failed to build DeviceInfo request")
+		err := fmt.Errorf("Failed to build DeviceInfo request")
+		log.Error().Err(err)
+		return err
 	}
 
 	log.Debug().Msgf("API Call: %s", deviceInfoPath)
@@ -82,29 +84,36 @@ func deviceInfo() {
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Fatal().Err(err).Msg("DeviceInfo HTTP Client error")
+		log.Error().Err(err).Msg("DeviceInfo HTTP Client error")
+		return err
 	}
 	defer resp.Body.Close()
 
 	var result deviceInfoResp
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Error decoding response")
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		log.Error().Err(err).Msg("Error decoding response")
+		return err
 	}
 
 	log.Trace().Msgf("DeviceInfo Response:\n%+v", result)
 
 	// Validate HTTP status code and response Success field
 	if resp.StatusCode != http.StatusOK || !result.Success {
-		log.Fatal().Msgf("DeviceInfo Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		err := fmt.Errorf("DeviceInfo Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		log.Error().Err(err)
+		return err
 	}
 
 	if len(result.DeviceInfo) == 0 {
-		log.Fatal().Msg("DeviceInfo: No DeviceInfo")
+		err := fmt.Errorf("DeviceInfo: No DeviceInfo")
+		log.Error().Err(err)
+		return err
 	}
 
 	if len(result.Device) == 0 {
-		log.Fatal().Msg("DeviceInfo: No Device")
+		err := fmt.Errorf("DeviceInfo: No Device")
+		log.Error().Err(err)
+		return err
 	}
 
 	for _, device := range result.Device {
@@ -130,6 +139,8 @@ func deviceInfo() {
 			break
 		}
 	}
+
+	return nil
 }
 
 func buildDeviceInfoRequest(ctx context.Context) *http.Request {

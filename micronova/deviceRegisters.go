@@ -106,10 +106,11 @@ func (ct *customTime) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func deviceRegisters() {
+func deviceRegisters() error {
 	if len(offsets) == 0 && len(dm.Config.Micronova.RegKeys) == 0 {
-		log.Error().Msg("unable to get deviceRegisters, offsets and RegKeys are empty")
-		return
+		err := fmt.Errorf("unable to get deviceRegisters, offsets and RegKeys are empty")
+		log.Error().Err(err)
+		return err
 	}
 
 	// Create context for timeout
@@ -118,7 +119,9 @@ func deviceRegisters() {
 
 	req := buildDeviceRegistersRequest(ctx)
 	if req == nil {
-		log.Fatal().Msg("Failed to build DeviceRegisters request")
+		err := fmt.Errorf("Failed to build DeviceRegisters request")
+		log.Error().Err(err)
+		return err
 	}
 
 	log.Debug().Msgf("API Call: %s", deviceRegistersPath)
@@ -126,30 +129,36 @@ func deviceRegisters() {
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Fatal().Err(err).Msg("DeviceRegisters HTTP Client error")
-		return
+		log.Error().Err(err).Msg("DeviceRegisters HTTP Client error")
+		return err
 	}
 	defer resp.Body.Close()
 
-	raw, err := httputil.DumpResponse(resp, true)
-	if err != nil {
-		log.Error().Err(err).Msg("Response dump error")
+	if log.Trace().Enabled() {
+		raw, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			log.Error().Err(err).Msg("Response dump error")
+		}
+		log.Trace().Msgf("DeviceRegisters Response:\n%+v", string(raw))
 	}
-	log.Trace().Msgf("DeviceRegisters Response:\n%+v", string(raw))
 
 	var result deviceRegistersResp
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Error decoding response")
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		log.Error().Err(err).Msg("Error decoding response")
+		return err
 	}
 
 	// Validate HTTP status code and response Success field
 	if resp.StatusCode != http.StatusOK || !result.Success {
-		log.Fatal().Msgf("DeviceRegisters Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		err := fmt.Errorf("DeviceRegisters Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		log.Error().Err(err)
+		return err
 	}
 
 	if len(result.DeviceRegistersMap.RegistersMap) == 0 {
-		log.Fatal().Msg("DeviceRegisters: No DeviceRegistersMap")
+		err := fmt.Errorf("DeviceRegisters: No DeviceRegistersMap")
+		log.Error().Err(err)
+		return err
 	}
 
 	for _, reg := range result.DeviceRegistersMap.RegistersMap[0].Registers {
@@ -202,6 +211,8 @@ func deviceRegisters() {
 	for _, par := range parameters {
 		log.Trace().Msgf("Parameter %s: %v", par.regKey, par)
 	}
+
+	return nil
 }
 
 func buildDeviceRegistersRequest(ctx context.Context) *http.Request {

@@ -72,7 +72,10 @@ var actions ActionsHolder
 func checkSession() error {
 	// Signup - Register app UUID
 	if dm.Session.UUID == "" {
-		signup()
+		if err := signup(); err != nil {
+			log.Error().Err(err).Msg("Signup Error")
+			return err
+		}
 	}
 
 	tokenExp, err := getJwtExpiration(dm.Session.Token)
@@ -89,14 +92,24 @@ func checkSession() error {
 
 	// Login if RefreshToken expired (or empty)
 	if refreshTokenExp.Before(time.Now()) {
-		login()
+		if err := login(); err != nil {
+			log.Error().Err(err).Msg("Login Error")
+			return err
+		}
 	}
 
 	// Update Token if JWT expired
 	if tokenExp.Before(time.Now()) {
-		err = updateToken()
-		if err != nil {
-			log.Error().Err(err).Msg("JWT Token Error - Tokens cleared")
+		if err := updateToken(); err != nil {
+			log.Error().Err(err).Msg("JWT Token Update Error")
+			return err
+		}
+	}
+
+	// Get ProductId and DeviceId (of first Device)
+	if dm.Session.ProductId == "" || dm.Session.DeviceId == "" {
+		if err := deviceList(); err != nil {
+			log.Error().Err(err)
 			return err
 		}
 	}
@@ -130,29 +143,34 @@ func Run(dataManager *appdata.DataManager, customercode string, apidomain string
 	}
 
 	for {
-		if err:=checkSession(); err!=nil {
+		if err := checkSession(); err != nil {
+			time.Sleep(durationActive)
 			continue
-		}
-
-		// Get ProductId and DeviceId (of first Device)
-		if dm.Session.ProductId == "" || dm.Session.DeviceId == "" {
-			deviceList()
 		}
 
 		// Get Device Info and Check if device is online/offline
 		if (state != stateActive && state != stateInactive) || deviceName == "" {
-			deviceInfo()
+			if err := deviceInfo(); err != nil {
+				time.Sleep(durationActive)
+				continue
+			}
 		}
 
 		if state == stateActive || state == stateInactive {
 			// Get list of offsets if no RegKeys in config
 			if len(dm.Config.Micronova.RegKeys) == 0 && len(offsets) == 0 {
-				readDeviceBuffer()
+				if err := readDeviceBuffer(); err != nil {
+					time.Sleep(durationActive)
+					continue
+				}
 			}
 
 			// Get list of parameters, based on RegKeys or offsets
 			if len(parameters) == 0 {
-				deviceRegisters()
+				if err := deviceRegisters(); err != nil {
+					time.Sleep(durationActive)
+					continue
+				}
 
 				topic := dm.Config.Mqtt.BaseTopic + "/" + deviceName + "/command/+"
 				queue.Subscribe(topic, receiveCommand)
@@ -165,7 +183,10 @@ func Run(dataManager *appdata.DataManager, customercode string, apidomain string
 			}
 
 			// Read the device parameters
-			readDevice()
+			if err := readDevice(); err != nil {
+				time.Sleep(durationActive)
+				continue
+			}
 
 			// run actions
 			if state == stateActive {

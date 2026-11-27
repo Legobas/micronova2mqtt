@@ -29,7 +29,7 @@ func receiveCommand(topic string, value string) {
 
 	log.Debug().Msgf("Command: %s=%s", command, value)
 
-	// Update expired JWT before calling API
+	// Check and update session before calling API
 	checkSession()
 
 	if command == powerCommand {
@@ -46,12 +46,18 @@ func SetPower(command string) {
 
 	switch command {
 	case powerOn:
-		writeDevice(statusManagedGet, statusManagedOn, statusManagedMask)
+		if err := writeDevice(statusManagedGet, statusManagedOn, statusManagedMask); err != nil {
+			log.Error().Err(err).Msg("could not send PowerOn command")
+			return
+		}
 		actions.reset()
 		log.Info().Msg("Power On")
 		queue.Publish(topicStart+"power", setPowerOn)
 	case powerOff:
-		writeDevice(statusManagedGet, statusManagedOff, statusManagedMask)
+		if err := writeDevice(statusManagedGet, statusManagedOff, statusManagedMask); err != nil {
+			log.Error().Err(err).Msg("could not send PowerOff command")
+			return
+		}
 		log.Info().Msg("Power Off")
 		queue.Publish(topicStart+"power", setPowerOff)
 	default:
@@ -104,5 +110,7 @@ func setParameter(param parameter, value int) {
 	log.Info().Msgf("MQTT command: Set Parameter %s to %d", param.title, value)
 
 	// Send the device parameter to Micronova
-	writeDevice(param.offset, value, param.mask)
+	if err := writeDevice(param.offset, value, param.mask); err != nil {
+		log.Error().Err(err).Msgf("could not set parameter %s", param.title)
+	}
 }

@@ -42,14 +42,16 @@ type devicesResp struct {
 	Error   string   `json:"Error"`
 }
 
-func deviceList() {
+func deviceList() error {
 	// Create context for timeout
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
 	req := buildDeviceListRequest(ctx)
 	if req == nil {
-		log.Fatal().Msg("Failed to build DeviceList request")
+		err := fmt.Errorf("Failed to build DeviceList request")
+		log.Error().Err(err)
+		return err
 	}
 
 	log.Debug().Msgf("API Call: %s", devicesPath)
@@ -57,26 +59,30 @@ func deviceList() {
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Fatal().Err(err).Msg("DeviceList HTTP Client error")
-		return
+		log.Error().Err(err).Msg("DeviceList HTTP Client error")
+		return err
 	}
 	defer resp.Body.Close()
 
 	var result devicesResp
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Error decoding response")
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		log.Error().Err(err).Msg("Error decoding response")
+		return err
 	}
 
 	log.Trace().Msgf("DeviceList Response:\n%+v", result)
 
 	// Validate HTTP status code and response Success field
 	if resp.StatusCode != http.StatusOK || !result.Success {
-		log.Fatal().Msgf("DeviceList Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		err := fmt.Errorf("DeviceList Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		log.Error().Err(err)
+		return err
 	}
 
 	if len(result.Devices) == 0 {
-		log.Fatal().Msg("DeviceList: No Devices")
+		err := fmt.Errorf("DeviceList: No Devices")
+		log.Error().Err(err)
+		return err
 	}
 
 	for _, device := range result.Devices {
@@ -98,6 +104,8 @@ func deviceList() {
 			break
 		}
 	}
+
+	return nil
 }
 
 func buildDeviceListRequest(ctx context.Context) *http.Request {

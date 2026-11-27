@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -34,14 +35,16 @@ type signupResp struct {
 	Error   string `json:"Error"`
 }
 
-func signup() {
+func signup() error {
 	// Create context for timeout
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
 	req := buildSignupRequest(ctx)
 	if req == nil {
-		log.Fatal().Msg("Failed to build Signup request")
+		err := fmt.Errorf("Failed to build Signup request")
+		log.Error().Err(err)
+		return err
 	}
 
 	log.Debug().Msgf("API Call: %s", signupPath)
@@ -49,20 +52,23 @@ func signup() {
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Signup HTTP Client error")
-		return
+		log.Error().Err(err).Msg("Signup HTTP Client error")
+		return err
 	}
 	defer resp.Body.Close()
 
 	var result signupResp
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Error decoding response")
+		log.Error().Err(err).Msg("Error decoding response")
+		return err
 	}
 
 	// Validate HTTP status code and response Success field
 	if resp.StatusCode != http.StatusCreated || !result.Success {
-		log.Fatal().Msgf("Signup Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		err := fmt.Errorf("Signup Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		log.Error().Err(err)
+		return err
 	}
 
 	if result.AppId != dm.Session.UUID {
@@ -74,7 +80,10 @@ func signup() {
 	// Save session
 	if err := dm.WriteSession(); err != nil {
 		log.Error().Err(err).Msg("Failed to write session")
+		return err
 	}
+
+	return nil
 }
 
 func buildSignupRequest(ctx context.Context) *http.Request {

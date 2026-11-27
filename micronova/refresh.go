@@ -30,7 +30,9 @@ func updateToken() error {
 
 	req := buildRefreshRequest(ctx)
 	if req == nil {
-		log.Fatal().Msg("Failed to build RefreshToken request")
+		err := fmt.Errorf("Failed to build RefreshToken request")
+		log.Error().Err(err)
+		return err
 	}
 
 	log.Debug().Msgf("API Call: %s", refreshPath)
@@ -45,12 +47,14 @@ func updateToken() error {
 	var result refreshResp
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Error decoding response")
+		log.Error().Err(err).Msg("Error decoding response")
+		return err
 	}
 
 	// Validate HTTP status code and response Success field
 	if resp.StatusCode != http.StatusCreated || !result.Success {
 		dm.SetSessionTokens("", "")
+		log.Warn().Msg("JWT Token Update failed - Tokens cleared")
 		return fmt.Errorf("RefreshToken Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
 	}
 

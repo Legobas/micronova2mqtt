@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -26,14 +27,16 @@ type loginResp struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func login() {
+func login() error {
 	// Create context for timeout
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
 	req := buildLoginRequest(ctx)
 	if req == nil {
-		log.Fatal().Msg("Failed to build Login request")
+		err := fmt.Errorf("Failed to build Login request")
+		log.Error().Err(err)
+		return err
 	}
 
 	log.Debug().Msgf("API Call: %s", loginPath)
@@ -41,28 +44,37 @@ func login() {
 	httpClient := &http.Client{Timeout: requestTimeout}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Login HTTP Client error")
+		log.Error().Err(err).Msg("DeviceList HTTP Client error")
+		return err
 	}
 	defer resp.Body.Close()
 
 	var result loginResp
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Error decoding response")
+		log.Error().Err(err).Msg("Error decoding response")
+		return err
 	}
 
 	// Validate HTTP status code and response Success field
 	if resp.StatusCode != http.StatusOK || !result.Success {
-		log.Fatal().Msgf("Login Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		err := fmt.Errorf("Login Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		log.Error().Err(err)
+		return err
 	}
 
 	if result.Token == "" || result.RefreshToken == "" {
-		log.Fatal().Msg("Login: Tokens missing")
+		err := fmt.Errorf("Login: Tokens missing")
+		log.Error().Err(err)
+		return err
 	}
 
 	if err := dm.SetSessionTokens(result.Token, result.RefreshToken); err != nil {
 		log.Error().Err(err).Msg("Failed to set tokens")
+		return err
 	}
+
+	return nil
 }
 
 func buildLoginRequest(ctx context.Context) *http.Request {

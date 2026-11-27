@@ -1,5 +1,5 @@
-github.com/eclipse/paho.mqtt.golang v1.5.1 h1:/VSOv3oDLlpqR2Epjn1Q7b2bSTplJIeV2ISgCl2W7nE=
-github.com/eclipse/paho.mqtt.golang v1.5.1/go.mod h1:1/yJCneuyOoCOzKSsOTUc0AJfpsItBGWvYpBLimhArU=
+github.com/eclipse/paho.mqtt.golang v1.5.2 h1:4pcXsR3nR9gJuHCpBC8UF6rTehpIoHrYRm+hGOCq7ZM=
+github.com/eclipse/paho.mqtt.golang v1.5.2/go.mod h1:rDbBdvBJ0K2cDnnazZcu0/cu7y3bFiICNVUOUWHnOOg=
 github.com/expr-lang/expr v1.18.1 h1:mu6I2eTkwUgMP+Q4KgS9Ipc1CrukUpRrG9PsQYPv9js=
 github.com/expr-lang/expr v1.18.1/go.mod h1:8/vRC7+7HBzESEqt5kKpYXxrxkr31SaO8r40VO/1IT4=
 github.com/golang-jwt/jwt/v5 v5.3.1 h1:kYf81DTWFe7t+1VvL7eS+jKFVWaUnK9cB1qbwn63YCY=

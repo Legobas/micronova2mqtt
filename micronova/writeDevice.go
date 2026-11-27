@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -32,14 +33,16 @@ type writedeviceResp struct {
 	Error     string `json:"Error"`
 }
 
-func writeDevice(item int, value int, mask int) {
+func writeDevice(item int, value int, mask int) error {
 	// Create context for timeout
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 
 	req := buildWriteDeviceRequest(ctx, item, value, mask)
 	if req == nil {
-		log.Fatal().Msg("Failed to build WriteDevice request")
+		err := fmt.Errorf("Failed to build WriteDevice request")
+		log.Error().Err(err)
+		return err
 	}
 
 	log.Debug().Msgf("API Call: %s -->", writeDevicePath)
@@ -48,36 +51,44 @@ func writeDevice(item int, value int, mask int) {
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Error().Err(err).Msg("WriteDevice HTTP request failed")
-		return
+		return err
 	}
 	defer resp.Body.Close()
 
 	var result writedeviceResp
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Error decoding response")
+		log.Error().Err(err).Msg("Error decoding response")
+		return err
 	}
 
 	log.Trace().Msgf("WriteDevice Response:\n%+v", result)
 
 	// Validate HTTP status code and response Success field
 	if resp.StatusCode != http.StatusOK || !result.Success {
-		log.Fatal().Msgf("WriteDevice Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		err := fmt.Errorf("WriteDevice Unsuccesful (%s) %s %s", resp.Status, result.Error, result.Text)
+		log.Error().Err(err)
+		return err
 	}
 
 	if result.RequestId == "" {
-		log.Fatal().Msg("WriteDevice: No Request ID")
+		err := fmt.Errorf("WriteDevice: No Request ID")
+		log.Error().Err(err)
+		return err
 	}
 
 	if err := getJobResult(result.RequestId); err != nil {
 		state = stateNotResponding
-		log.Error().Err(err).Msg("Device is not responding")
-		return
+		err := fmt.Errorf("Device is not responding")
+		log.Error().Err(err)
+		return err
 	}
 
 	for _, par := range parameters {
 		log.Trace().Msgf("Parameter %s=%v", par.regKey, par.text)
 	}
+
+	return nil
 }
 
 func buildWriteDeviceRequest(ctx context.Context, item int, value int, mask int) *http.Request {
