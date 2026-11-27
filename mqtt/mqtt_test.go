@@ -2,209 +2,320 @@ package mqtt
 
 import (
 	"errors"
-	"sync"
+	"strings"
 	"testing"
 	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
 
-// --- Mocks ---
+// ---- fakes ----
 
-type mockToken struct {
-	err error
+type fakeToken struct {
+	MQTT.Token // embedded so unused methods are satisfied without implementing them
+	err        error
+	timedOut   bool
 }
 
-func (m *mockToken) Wait() bool                       { return true }
-func (m *mockToken) WaitTimeout(d time.Duration) bool { return true }
-func (m *mockToken) Done() <-chan struct{} {
-	ch := make(chan struct{})
-	close(ch)
-	return ch
-}
-func (m *mockToken) Error() error { return m.err }
+func (t *fakeToken) Wait() bool                     { return true }
+func (t *fakeToken) WaitTimeout(time.Duration) bool { return !t.timedOut }
+func (t *fakeToken) Error() error                   { return t.err }
 
-type publishedMsg struct {
+type fakeMessage struct {
+	MQTT.Message
+	topic   string
+	payload []byte
+}
+
+func (m fakeMessage) Topic() string   { return m.topic }
+func (m fakeMessage) Payload() []byte { return m.payload }
+
+type publishCall struct {
 	topic    string
 	qos      byte
 	retained bool
 	payload  interface{}
 }
 
-type mockClient struct {
-	mu           sync.Mutex
-	connected    bool
-	published    []publishedMsg
-	subscribed   map[string]MQTT.MessageHandler
-	publishErr   error
-	subscribeErr error
+type fakeClient struct {
+	MQTT.Client
+	connected   bool
+	token       *fakeToken
+	published   []publishCall
+	subscribed  []string
+	subQos      []byte
+	handlers    map[string]MQTT.MessageHandler
+	disconnects []uint
 }
 
-func newMockClient() *mockClient {
-	return &mockClient{
-		connected:  true,
-		subscribed: make(map[string]MQTT.MessageHandler),
+func newFakeClient(connected bool) *fakeClient {
+	return &fakeClient{
+		connected: connected,
+		token:     &fakeToken{},
+		handlers:  map[string]MQTT.MessageHandler{},
 	}
 }
 
-func (m *mockClient) IsConnected() bool      { return m.connected }
-func (m *mockClient) IsConnectionOpen() bool { return m.connected }
-func (m *mockClient) Connect() MQTT.Token    { return &mockToken{} }
-func (m *mockClient) Disconnect(quiesce uint) {
-	m.connected = false
+func (c *fakeClient) IsConnected() bool { return c.connected }
+
+func (c *fakeClient) Publish(topic string, qos byte, retained bool, payload interface{}) MQTT.Token {
+	c.published = append(c.published, publishCall{topic, qos, retained, payload})
+	return c.token
 }
 
-func (m *mockClient) Publish(topic string, qos byte, retained bool, payload interface{}) MQTT.Token {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.published = append(m.published, publishedMsg{
-		topic:    topic,
-		qos:      qos,
-		retained: retained,
-		payload:  payload,
-	})
-	return &mockToken{err: m.publishErr}
+func (c *fakeClient) Subscribe(topic string, qos byte, cb MQTT.MessageHandler) MQTT.Token {
+	c.subscribed = append(c.subscribed, topic)
+	c.subQos = append(c.subQos, qos)
+	c.handlers[topic] = cb
+	return c.token
 }
 
-func (m *mockClient) Subscribe(topic string, qos byte, callback MQTT.MessageHandler) MQTT.Token {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.subscribed[topic] = callback
-	return &mockToken{err: m.subscribeErr}
+func (c *fakeClient) Disconnect(quiesce uint) {
+	c.disconnects = append(c.disconnects, quiesce)
 }
 
-func (m *mockClient) SubscribeMultiple(filters map[string]byte, callback MQTT.MessageHandler) MQTT.Token {
-	return &mockToken{}
-}
-func (m *mockClient) Unsubscribe(topics ...string) MQTT.Token             { return &mockToken{} }
-func (m *mockClient) AddRoute(topic string, callback MQTT.MessageHandler) {}
-func (m *mockClient) OptionsReader() MQTT.ClientOptionsReader             { return MQTT.ClientOptionsReader{} }
-
-// mockMessage implements MQTT.Message to simulate incoming broker messages
-type mockMessage struct {
-	topic   string
-	payload []byte
-}
-
-func (m *mockMessage) Duplicate() bool   { return false }
-func (m *mockMessage) Qos() byte         { return 0 }
-func (m *mockMessage) Retained() bool    { return false }
-func (m *mockMessage) Topic() string     { return m.topic }
-func (m *mockMessage) MessageID() uint16 { return 1 }
-func (m *mockMessage) Payload() []byte   { return m.payload }
-func (m *mockMessage) Ack()              {}
-
-// --- Unit Tests ---
-
-func setupTestConnection(client *mockClient) *MqttConnection {
+func newTestConn(fc *fakeClient) *MqttConnection {
 	return &MqttConnection{
-		mqttClient:    client,
+		mqttClient:    fc,
 		qos:           QosAtLeastOnce,
-		retain:        false,
-		baseTopic:     "micronova",
-		statusTopic:   "micronova/status",
+		retain:        true,
+		baseTopic:     "home/sensors",
+		statusTopic:   "home/sensors/status",
 		subscriptions: make(map[string]SubscriberFunc),
 	}
 }
 
-func TestPublish(t *testing.T) {
-	client := newMockClient()
-	mc := setupTestConnection(client)
+// ---- NewMqttConnection ----
 
-	mc.Publish("micronova/command", "ON")
-
-	if len(client.published) != 1 {
-		t.Fatalf("expected 1 published message, got %d", len(client.published))
-	}
-
-	msg := client.published[0]
-	if msg.topic != "micronova/command" {
-		t.Errorf("expected topic 'micronova/command', got '%s'", msg.topic)
-	}
-	if msg.payload != "ON" {
-		t.Errorf("expected payload 'ON', got '%v'", msg.payload)
-	}
-	if msg.qos != QosAtLeastOnce {
-		t.Errorf("expected QoS %d, got %d", QosAtLeastOnce, msg.qos)
+func TestNewMqttConnection_EmptyBaseTopic(t *testing.T) {
+	for _, base := range []string{"", "   ", "/"} {
+		_, err := NewMqttConnection(MqttProperties{Url: "tcp://127.0.0.1:1", BaseTopic: base})
+		if err == nil {
+			t.Errorf("BaseTopic %q: expected error, got nil", base)
+		}
 	}
 }
 
-func TestSubscribeAndReceiveMessage(t *testing.T) {
-	client := newMockClient()
-	mc := setupTestConnection(client)
+func TestNewMqttConnection_InvalidQos(t *testing.T) {
+	_, err := NewMqttConnection(MqttProperties{
+		Url:       "tcp://127.0.0.1:1",
+		BaseTopic: "x",
+		Qos:       QosExactlyOnce + 1,
+	})
+	if err == nil || !strings.Contains(err.Error(), "invalid QoS") {
+		t.Fatalf("expected invalid QoS error, got %v", err)
+	}
+}
 
-	receivedTopic := ""
-	receivedPayload := ""
+func TestNewMqttConnection_UnreachableBroker(t *testing.T) {
+	// Port 1 is almost never open, so the initial connect should fail.
+	_, err := NewMqttConnection(MqttProperties{
+		Url:       "tcp://127.0.0.1:1",
+		BaseTopic: "x",
+		ClientId:  "test",
+	})
+	if err == nil || !strings.Contains(err.Error(), "MQTT connection failed") {
+		t.Fatalf("expected connection failure, got %v", err)
+	}
+}
 
-	mc.Subscribe("micronova/set", func(topic string, payload string) {
-		receivedTopic = topic
-		receivedPayload = payload
+// ---- waitToken ----
+
+func TestWaitToken(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		if err := waitToken(&fakeToken{}); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	})
 
-	// Verify subscription was registered on the client and saved in internal map
-	handler, exists := client.subscribed["micronova/set"]
-	if !exists {
-		t.Fatal("expected subscription to be registered on MQTT client")
-	}
-
-	// Simulate an incoming message
-	handler(client, &mockMessage{topic: "micronova/set", payload: []byte("22.5")})
-
-	if receivedTopic != "micronova/set" || receivedPayload != "22.5" {
-		t.Errorf("handler received (%s, %s), expected ('micronova/set', '22.5')", receivedTopic, receivedPayload)
-	}
-}
-
-func TestSubscribeNilHandlerIgnored(t *testing.T) {
-	client := newMockClient()
-	mc := setupTestConnection(client)
-
-	mc.Subscribe("micronova/nil", nil)
-
-	if len(mc.subscriptions) != 0 {
-		t.Errorf("expected 0 stored subscriptions for nil handler, got %d", len(mc.subscriptions))
-	}
-	if len(client.subscribed) != 0 {
-		t.Errorf("expected 0 client subscriptions for nil handler, got %d", len(client.subscribed))
-	}
-}
-
-func TestReconnectRestoresStatusAndSubscriptions(t *testing.T) {
-	client := newMockClient()
-	mc := setupTestConnection(client)
-
-	// 1. Register subscriptions before disconnect
-	called := false
-	mc.Subscribe("micronova/power", func(topic string, payload string) {
-		called = true
+	t.Run("token error", func(t *testing.T) {
+		want := errors.New("boom")
+		if err := waitToken(&fakeToken{err: want}); !errors.Is(err, want) {
+			t.Fatalf("expected %v, got %v", want, err)
+		}
 	})
 
-	// 2. Simulate connection drop and broker wiping clean session state
-	mc.handleConnectionLost(errors.New("EOF"))
-	client.subscribed = make(map[string]MQTT.MessageHandler)
-	client.published = nil
+	t.Run("timeout", func(t *testing.T) {
+		err := waitToken(&fakeToken{timedOut: true})
+		if err == nil || !strings.Contains(err.Error(), "timed out") {
+			t.Fatalf("expected timeout error, got %v", err)
+		}
+	})
+}
 
-	// 3. Simulate Paho triggering OnConnectHandler upon reconnect
-	mc.handleConnect(client)
+// ---- Publish ----
 
-	// Verify "Online" status was republished
-	if len(client.published) != 1 {
-		t.Fatalf("expected 'Online' status to be republished on reconnect, got %d messages", len(client.published))
+func TestPublish_UsesConfiguredQosAndRetain(t *testing.T) {
+	fc := newFakeClient(true)
+	mc := newTestConn(fc)
+
+	mc.Publish("home/sensors/temp", "21.5")
+
+	if len(fc.published) != 1 {
+		t.Fatalf("expected 1 publish, got %d", len(fc.published))
 	}
-	statusMsg := client.published[0]
-	if statusMsg.topic != "micronova/status" || statusMsg.payload != "Online" || !statusMsg.retained {
-		t.Errorf("unexpected status message on reconnect: %+v", statusMsg)
+	p := fc.published[0]
+	if p.topic != "home/sensors/temp" || p.payload != "21.5" {
+		t.Errorf("unexpected topic/payload: %q / %v", p.topic, p.payload)
+	}
+	if p.qos != QosAtLeastOnce || !p.retained {
+		t.Errorf("expected qos=%d retained=true, got qos=%d retained=%v", QosAtLeastOnce, p.qos, p.retained)
+	}
+}
+
+func TestPublish_ErrorDoesNotPanic(t *testing.T) {
+	fc := newFakeClient(true)
+	fc.token = &fakeToken{err: errors.New("network down")}
+	mc := newTestConn(fc)
+
+	mc.Publish("a/b", "x") // should log and return, not panic
+	if len(fc.published) != 1 {
+		t.Fatalf("expected publish attempt, got %d", len(fc.published))
+	}
+}
+
+// ---- Subscribe ----
+
+func TestSubscribe_NilHandlerIsIgnored(t *testing.T) {
+	fc := newFakeClient(true)
+	mc := newTestConn(fc)
+
+	mc.Subscribe("a/b", nil)
+
+	if _, ok := mc.subscriptions["a/b"]; ok {
+		t.Error("nil handler should not be stored")
+	}
+	if len(fc.subscribed) != 0 {
+		t.Error("nil handler should not trigger a broker subscribe")
+	}
+}
+
+func TestSubscribe_WhenConnected(t *testing.T) {
+	fc := newFakeClient(true)
+	mc := newTestConn(fc)
+
+	mc.Subscribe("a/b", func(string, string) {})
+
+	if _, ok := mc.subscriptions["a/b"]; !ok {
+		t.Error("subscription should be stored")
+	}
+	if len(fc.subscribed) != 1 || fc.subscribed[0] != "a/b" {
+		t.Fatalf("expected subscribe to a/b, got %v", fc.subscribed)
+	}
+	if fc.subQos[0] != QosAtLeastOnce {
+		t.Errorf("expected qos %d, got %d", QosAtLeastOnce, fc.subQos[0])
+	}
+}
+
+func TestSubscribe_WhenDisconnected_StoresOnly(t *testing.T) {
+	fc := newFakeClient(false)
+	mc := newTestConn(fc)
+
+	mc.Subscribe("a/b", func(string, string) {})
+
+	if _, ok := mc.subscriptions["a/b"]; !ok {
+		t.Error("subscription should be stored for later restore")
+	}
+	if len(fc.subscribed) != 0 {
+		t.Error("should not subscribe on broker while disconnected")
+	}
+}
+
+func TestSubscribe_HandlerReceivesMessages(t *testing.T) {
+	fc := newFakeClient(true)
+	mc := newTestConn(fc)
+
+	var gotTopic, gotPayload string
+	mc.Subscribe("a/b", func(topic, payload string) {
+		gotTopic, gotPayload = topic, payload
+	})
+
+	cb := fc.handlers["a/b"]
+	if cb == nil {
+		t.Fatal("expected a message callback to be registered")
+	}
+	cb(fc, fakeMessage{topic: "a/b", payload: []byte("hello")})
+
+	if gotTopic != "a/b" || gotPayload != "hello" {
+		t.Errorf("handler got topic=%q payload=%q", gotTopic, gotPayload)
+	}
+}
+
+// ---- handleConnect ----
+
+func TestHandleConnect_PublishesOnlineAndRestoresSubscriptions(t *testing.T) {
+	fc := newFakeClient(true)
+	mc := newTestConn(fc)
+	mc.subscriptions["a/b"] = func(string, string) {}
+	mc.subscriptions["c/d"] = func(string, string) {}
+
+	mc.handleConnect(fc)
+
+	if len(fc.published) == 0 {
+		t.Fatal("expected online status publish")
+	}
+	status := fc.published[0]
+	if status.topic != "home/sensors/status" || status.payload != "Online" {
+		t.Errorf("unexpected status publish: %q %v", status.topic, status.payload)
+	}
+	if status.qos != QosAtLeastOnce || !status.retained {
+		t.Errorf("status should be retained QoS 1, got qos=%d retained=%v", status.qos, status.retained)
 	}
 
-	// Verify subscription was restored
-	restoredHandler, exists := client.subscribed["micronova/power"]
-	if !exists {
-		t.Fatal("expected 'micronova/power' subscription to be restored on reconnect")
+	if len(fc.subscribed) != 2 {
+		t.Fatalf("expected 2 restored subscriptions, got %v", fc.subscribed)
 	}
+}
 
-	// Verify restored callback works
-	restoredHandler(client, &mockMessage{topic: "micronova/power", payload: []byte("1")})
-	if !called {
-		t.Error("expected restored subscription handler to execute")
+// ---- Close ----
+
+func TestClose_WhenConnected_PublishesOfflineAndDisconnects(t *testing.T) {
+	fc := newFakeClient(true)
+	mc := newTestConn(fc)
+
+	mc.Close()
+
+	if len(fc.published) != 1 {
+		t.Fatalf("expected offline publish, got %d", len(fc.published))
+	}
+	p := fc.published[0]
+	if p.topic != "home/sensors/status" || p.payload != "Offline" || !p.retained {
+		t.Errorf("unexpected offline publish: %+v", p)
+	}
+	if len(fc.disconnects) != 1 || fc.disconnects[0] != 250 {
+		t.Errorf("expected disconnect(250), got %v", fc.disconnects)
+	}
+}
+
+func TestClose_WhenDisconnected_SkipsPublish(t *testing.T) {
+	fc := newFakeClient(false)
+	mc := newTestConn(fc)
+
+	mc.Close()
+
+	if len(fc.published) != 0 {
+		t.Error("should not publish offline status when disconnected")
+	}
+	if len(fc.disconnects) != 1 {
+		t.Errorf("expected disconnect call, got %v", fc.disconnects)
+	}
+}
+
+func TestClose_NilReceiverIsSafe(t *testing.T) {
+	var mc *MqttConnection
+	mc.Close() // must not panic
+}
+
+// ---- IsConnected ----
+
+func TestIsConnected(t *testing.T) {
+	if (&MqttConnection{}).IsConnected() {
+		t.Error("nil client should not be connected")
+	}
+	if !newTestConn(newFakeClient(true)).IsConnected() {
+		t.Error("expected connected")
+	}
+	if newTestConn(newFakeClient(false)).IsConnected() {
+		t.Error("expected disconnected")
 	}
 }

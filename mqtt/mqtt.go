@@ -113,8 +113,8 @@ func (mc *MqttConnection) handleConnect(c MQTT.Client) {
 	}
 }
 
-func (mc *MqttConnection) Publish(topic string, value string) {
-	token := mc.mqttClient.Publish(topic, mc.qos, mc.retain, value)
+func (mc *MqttConnection) Publish(topic string, message string) {
+	token := mc.mqttClient.Publish(topic, mc.qos, mc.retain, message)
 	if err := waitToken(token); err != nil {
 		log.Error().Err(err).Msgf("failed to publish to %s", topic)
 	}
@@ -154,13 +154,15 @@ func (mc *MqttConnection) IsConnected() bool {
 }
 
 func (mc *MqttConnection) Close() {
-	if mc.mqttClient.IsConnected() {
-		token := mc.mqttClient.Publish(mc.statusTopic, QosAtLeastOnce, retainMessage, "Offline")
-		if err := waitToken(token); err != nil {
-			log.Error().Err(err).Msg("failed to publish offline status")
+	if mc != nil && mc.mqttClient != nil {
+		if mc.mqttClient.IsConnected() {
+			token := mc.mqttClient.Publish(mc.statusTopic, QosAtLeastOnce, retainMessage, "Offline")
+			if err := waitToken(token); err != nil {
+				log.Error().Err(err).Msg("failed to publish offline status")
+			}
 		}
+		mc.mqttClient.Disconnect(250)
 	}
-	mc.mqttClient.Disconnect(250)
 }
 
 func waitToken(token MQTT.Token) error {
